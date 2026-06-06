@@ -25,9 +25,10 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap justify-between items-center">
+      {/* Header dan filter responsif */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <h1 className="text-2xl font-bold text-gray-800">Dashboard Rangkuman</h1>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <select
             className="border rounded px-3 py-1 text-sm bg-white"
             value={filterDaerah}
@@ -48,6 +49,7 @@ export default function DashboardPage() {
           </select>
         </div>
       </div>
+
       <SummaryMetrics salurData={filteredSalur} masterData={masterData} />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <TabelPerDaerah salurData={filteredSalur} />

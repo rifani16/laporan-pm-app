@@ -38,15 +38,11 @@ export const addSalur = async (payload) => {
   return await res.json();
 };
 
-export const editSalur = async (idSalur, updatedFields) => {
-  const payload = {
-    action: 'EDIT_SALUR',
-    data: { 'ID SALUR': idSalur, ...updatedFields }
-  };
+export const editSalur = async (payload) => {
   const res = await fetch(`${API_BASE}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
+    body: JSON.stringify({ action: 'EDIT_SALUR', data: payload })
   });
   return await res.json();
 };

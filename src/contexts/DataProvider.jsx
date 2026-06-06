@@ -41,8 +41,8 @@ export const DataProvider = ({ children }) => {
     return result;
   };
 
-  const updateSalur = async (idSalur, updatedFields) => {
-    const result = await editSalur(idSalur, updatedFields);
+  const updateSalur = async (payload) => {
+    const result = await editSalur(payload);
     if (result.success) await refreshData();
     return result;
   };
