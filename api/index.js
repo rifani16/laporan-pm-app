@@ -2,16 +2,15 @@ export default async function handler(req, res) {
   // eslint-disable-next-line no-undef
   const gasUrl = process.env.VITE_GAS_URL;
   if (!gasUrl) {
-    return res.status(500).json({ error: 'VITE_GAS_URL missing' });
+    return res.status(500).json({ error: 'VITE_GAS_URL tidak diset di environment Vercel' });
   }
-  
+
   let target = gasUrl;
-  // Hapus prefix /api dari path
   const pathPart = req.url.replace(/^\/api/, '');
   if (pathPart && pathPart !== '/') {
     target += pathPart;
   }
-  
+
   try {
     const fetchOptions = {
       method: req.method,
