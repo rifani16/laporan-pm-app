@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL;
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 export const fetchAllData = async () => {
   const res = await fetch(`${API_BASE}`);
@@ -34,19 +34,6 @@ export const addSalur = async (payload) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'TAMBAH_SALUR', data: payload })
-  });
-  return await res.json();
-};
-
-export const editSalur = async (idSalur, updatedFields) => {
-  const payload = {
-    action: 'EDIT_SALUR',
-    data: { 'ID SALUR': idSalur, ...updatedFields }
-  };
-  const res = await fetch(`${API_BASE}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
   });
   return await res.json();
 };

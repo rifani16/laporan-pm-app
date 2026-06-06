@@ -7,11 +7,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const gasUrl = env.VITE_GAS_URL;
 
-  if (!gasUrl) {
-    console.warn('⚠️ VITE_GAS_URL tidak ditemukan di environment. Proxy tidak akan berfungsi.');
-  }
-
-  return {
+  const config = {
     base: '/',
     plugins: [react()],
     resolve: {
@@ -19,19 +15,20 @@ export default defineConfig(({ mode }) => {
         '@': path.resolve(process.cwd(), './src'),
       },
     },
-    server: {
+  };
+
+  // Proxy hanya untuk development
+  if (mode === 'development') {
+    config.server = {
       proxy: {
         '/api': {
           target: gasUrl,
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api/, ''),
-          configure: (proxy) => {
-            proxy.on('error', (err) => {
-              console.log('proxy error', err);
-            });
-          },
         },
       },
-    },
-  };
+    };
+  }
+
+  return config;
 });
