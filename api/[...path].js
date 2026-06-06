@@ -1,17 +1,16 @@
-/* eslint-disable no-undef */
-// api/[...path].js
 export default async function handler(req, res) {
+  // eslint-disable-next-line no-undef
   const gasUrl = process.env.VITE_GAS_URL;
   
   if (!gasUrl) {
     return res.status(500).json({ error: 'VITE_GAS_URL tidak diset di environment Vercel' });
   }
 
-  // Tentukan target URL (hapus prefix /api jika ada)
+  // Hapus prefix /api dari path
   let target = gasUrl;
-  if (req.url !== '/api') {
-    const pathPart = req.url.replace('/api', '');
-    target += pathPart;
+  const urlPath = req.url.replace('/api', '');
+  if (urlPath && urlPath !== '/') {
+    target += urlPath;
   }
 
   try {
@@ -21,7 +20,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
       },
     };
-    if (req.method !== 'GET') {
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
       fetchOptions.body = JSON.stringify(req.body);
     }
 
