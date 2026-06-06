@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import EditModal from './EditModal';
 import DetailPmModal from './DetailPmModal';
-import Pagination from '../../Common/Pagination';
+import Pagination from '@/components/Common/Pagination';
 
 export default function MasterTable({ data, onUpdate }) {
   const [editItem, setEditItem] = useState(null);

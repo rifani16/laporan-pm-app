@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
-import { useData } from '../hooks/useData';
-import { useToast } from '../hooks/useToast';
-import Pagination from '../components/Common/Pagination';
+import { useData } from '@/hooks/useData';
+import { useToast } from '@/hooks/useToast';
+import Pagination from "@/components/Common/Pagination";
 
 // Modal Detail Transaksi
 const DetailSalurModal = ({ item, onClose }) => {
