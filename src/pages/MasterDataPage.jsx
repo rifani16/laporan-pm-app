@@ -9,8 +9,8 @@ export default function MasterDataPage() {
   const [filterDaerah, setFilterDaerah] = useState('semua');
 
   const filteredMaster = filterDaerah === 'semua'
-    ? masterData
-    : masterData.filter(pm => pm['DAERAH'] === filterDaerah);
+  ? (masterData || [])
+  : (masterData || []).filter(pm => pm['DAERAH'] === filterDaerah);
 
   const daerahList = ['semua', ...(refData.daerah || [])];
 
