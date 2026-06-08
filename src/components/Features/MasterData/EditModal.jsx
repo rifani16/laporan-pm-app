@@ -17,8 +17,10 @@ export default function EditModal({ item, onClose, onSave }) {
     'PEKERJAAN': item['PEKERJAAN'],
     'DAERAH': item['DAERAH']
   });
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSave = async () => {
+    setSubmitting(true);
     try {
       const result = await onSave(item['ID PM'], form);
       if (result.success) {
@@ -29,6 +31,8 @@ export default function EditModal({ item, onClose, onSave }) {
       }
     } catch (err) {
       showToast('Error: ' + err.message, 'error');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -41,22 +45,44 @@ export default function EditModal({ item, onClose, onSave }) {
             <div key={k}>
               <label className="block text-sm font-medium">{k}</label>
               {k === 'ASNAF' ? (
-                <select className="w-full border rounded p-2" value={form[k]} onChange={e => setForm({ ...form, [k]: e.target.value })}>
+                <select
+                  className="w-full border rounded p-2"
+                  value={form[k]}
+                  onChange={e => setForm({ ...form, [k]: e.target.value })}
+                >
                   {refData.asnaf.map(a => <option key={a}>{a}</option>)}
                 </select>
               ) : k === 'DAERAH' ? (
-                <select className="w-full border rounded p-2" value={form[k]} onChange={e => setForm({ ...form, [k]: e.target.value })}>
+                <select
+                  className="w-full border rounded p-2"
+                  value={form[k]}
+                  onChange={e => setForm({ ...form, [k]: e.target.value })}
+                >
                   {refData.daerah.map(d => <option key={d}>{d}</option>)}
                 </select>
               ) : (
-                <input className="w-full border rounded p-2" value={form[k] || ''} onChange={e => setForm({ ...form, [k]: e.target.value })} />
+                <input
+                  className="w-full border rounded p-2"
+                  value={form[k] || ''}
+                  onChange={e => setForm({ ...form, [k]: e.target.value })}
+                />
               )}
             </div>
           ))}
         </div>
         <div className="flex justify-end gap-2 mt-4">
-          <button onClick={onClose} className="px-4 py-2 border rounded">Batal</button>
-          <button onClick={handleSave} className="px-4 py-2 bg-teal-600 text-white rounded">Simpan</button>
+          <button onClick={onClose} className="px-4 py-2 border rounded" disabled={submitting}>
+            Batal
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={submitting}
+            className={`px-4 py-2 rounded text-white ${
+              submitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-teal-600 hover:bg-teal-700'
+            }`}
+          >
+            {submitting ? 'Menyimpan...' : 'Simpan'}
+          </button>
         </div>
       </div>
     </div>

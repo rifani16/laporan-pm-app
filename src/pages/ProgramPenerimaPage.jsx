@@ -13,16 +13,20 @@ export default function ProgramPenerimaPage() {
   const [editItem, setEditItem] = useState(null);
   const rowsPerPage = 10;
 
+  // Di dalam ProgramPenerimaPage, saat mapping enrichedSalur
   const enrichedSalur = useMemo(() => {
     return salurData.map(s => {
       const master = masterData.find(m => m['ID PM'] === s['ID PM']);
-      return {
-        ...s, // ini sudah menyertakan JUMLAH_PENERIMAAN
+      const result = {
+        ...s, // ambil semua properti asli dari salurData (termasuk JUMLAH_PENERIMAAN)
         'NAMA PM': master ? master['NAMA PM'] : s['NAMA PM'],
         'DAERAH': s['DAERAH'] || (master ? master['DAERAH'] : ''),
         'ALAMAT': s['ALAMAT'] || (master ? master['ALAMAT'] : ''),
         'NIK': s['NIK'] || (master ? master['NIK'] : '')
       };
+      // Debug: lihat apakah JUMLAH_PENERIMAAN ada
+      console.log('Data transaksi:', result['ID SALUR'], 'Jumlah:', result['JUMLAH_PENERIMAAN']);
+      return result;
     });
   }, [salurData, masterData]);
 
