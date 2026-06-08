@@ -1,23 +1,18 @@
 import { useState } from 'react';
 import EditModal from './EditModal';
 import DetailPmModal from './DetailPmModal';
-import Pagination from '@/components/Common/Pagination';
+import Pagination from '../../Common/Pagination';
 
-export default function MasterTable({ data, onUpdate }) {
+export default function MasterTable({ data, onUpdate, currentPage, onPageChange, rowsPerPage = 10 }) {
   const [editItem, setEditItem] = useState(null);
   const [detailItem, setDetailItem] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10;
   const totalPages = Math.ceil(data.length / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
   const paginated = data.slice(startIndex, startIndex + rowsPerPage);
 
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
+      {/* tabel sama seperti sebelumnya */}
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead className="bg-gray-100">
@@ -45,7 +40,7 @@ export default function MasterTable({ data, onUpdate }) {
           </tbody>
         </table>
       </div>
-      <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+      <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={onPageChange} />
       {editItem && <EditModal item={editItem} onClose={() => setEditItem(null)} onSave={onUpdate} />}
       {detailItem && <DetailPmModal pm={detailItem} onClose={() => setDetailItem(null)} />}
     </div>

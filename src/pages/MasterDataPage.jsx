@@ -7,25 +7,29 @@ export default function MasterDataPage() {
   const { masterData, updateMaster, loading, refreshData, refData } = useData();
   const [showModal, setShowModal] = useState(false);
   const [filterDaerah, setFilterDaerah] = useState('semua');
+  const [currentPage, setCurrentPage] = useState(1); // ← tambah state halaman
 
   const filteredMaster = filterDaerah === 'semua'
-  ? (masterData || [])
-  : (masterData || []).filter(pm => pm['DAERAH'] === filterDaerah);
+    ? (masterData || [])
+    : (masterData || []).filter(pm => pm['DAERAH'] === filterDaerah);
 
   const daerahList = ['semua', ...(refData.daerah || [])];
+
+  const handleFilterChange = (e) => {
+    setFilterDaerah(e.target.value);
+    setCurrentPage(1); // ← reset halaman ke 1 saat filter berubah
+  };
 
   if (loading) return <div className="text-center py-10">Memuat data master...</div>;
 
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">Data Penerima Manfaat</h1>
-      
-      {/* Filter dan tombol dalam satu baris responsif */}
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         <select
           className="border rounded px-3 py-1 text-sm bg-white flex-1 min-w-[120px]"
           value={filterDaerah}
-          onChange={e => setFilterDaerah(e.target.value)}
+          onChange={handleFilterChange}
         >
           {daerahList.map(d => (
             <option key={d} value={d}>{d === 'semua' ? 'Semua Daerah' : d}</option>
@@ -38,8 +42,12 @@ export default function MasterDataPage() {
           + Tambah PM
         </button>
       </div>
-      
-      <MasterTable data={filteredMaster} onUpdate={updateMaster} />
+      <MasterTable
+        data={filteredMaster}
+        onUpdate={updateMaster}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+      />
       {showModal && (
         <TambahPmModal
           onClose={() => setShowModal(false)}
