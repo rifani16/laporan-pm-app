@@ -19,7 +19,7 @@ export const DataProvider = ({ children }) => {
 
   const refreshData = async () => {
     setLoading(true);
-    await invalidateCache();
+    await invalidateCache(); // ini akan memanggil loadData(true) di useCache
     setLoading(false);
   };
 

@@ -25,9 +25,9 @@ export default function EditSalurModal({ data, onClose, onSave }) {
   const selectedPm = masterData.find(p => p['ID PM'] === selectedPmId);
   const namaOptions = selectedPm
     ? [
-        { label: selectedPm['NAMA PM'], nik: selectedPm['NIK'], daerah: selectedPm['DAERAH'], alamat: selectedPm['ALAMAT'] },
-        { label: selectedPm['NAMA PM ALT'], nik: selectedPm['NIK ALT'], daerah: selectedPm['DAERAH'], alamat: selectedPm['ALAMAT'] }
-      ].filter(o => o.label)
+      { label: selectedPm['NAMA PM'], nik: selectedPm['NIK'], daerah: selectedPm['DAERAH'], alamat: selectedPm['ALAMAT'] },
+      { label: selectedPm['NAMA PM ALT'], nik: selectedPm['NIK ALT'], daerah: selectedPm['DAERAH'], alamat: selectedPm['ALAMAT'] }
+    ].filter(o => o.label)
     : [];
 
   const handlePmChange = (e) => {
@@ -75,12 +75,12 @@ export default function EditSalurModal({ data, onClose, onSave }) {
       const result = await onSave(payload);
       if (result?.success) {
         showToast('Transaksi berhasil diperbarui', 'success');
-        onClose();
+        onClose(); // modal ditutup sebelum refresh selesai
+        // refresh sudah dilakukan oleh onSave (di DataProvider)
       } else {
         showToast('Gagal: ' + (result?.error || 'Unknown error'), 'error');
       }
     } catch (err) {
-      console.error(err);
       showToast('Error: ' + err.message, 'error');
     } finally {
       setSubmitting(false);
@@ -112,7 +112,7 @@ export default function EditSalurModal({ data, onClose, onSave }) {
           )}
           <div>
             <label className="block text-sm font-medium">Program</label>
-            <select className="w-full border rounded p-2" value={form.PROGRAM} onChange={e => setForm({...form, PROGRAM: e.target.value})}>
+            <select className="w-full border rounded p-2" value={form.PROGRAM} onChange={e => setForm({ ...form, PROGRAM: e.target.value })}>
               <option value="">-- Pilih Program --</option>
               {refData.program.map(p => <option key={p}>{p}</option>)}
             </select>
@@ -134,7 +134,7 @@ export default function EditSalurModal({ data, onClose, onSave }) {
               type="number"
               className="w-full border rounded p-2"
               value={form.JUMLAH_PENERIMAAN}
-              onChange={e => setForm({...form, JUMLAH_PENERIMAAN: e.target.value})}
+              onChange={e => setForm({ ...form, JUMLAH_PENERIMAAN: e.target.value })}
               placeholder="Nominal dalam Rupiah"
             />
           </div>
