@@ -1,21 +1,21 @@
 export default function DetailPmModal({ pm, onClose }) {
   if (!pm) return null;
 
-  // Daftar field yang ingin ditampilkan (sesuaikan dengan kebutuhan)
   const fields = [
     { label: 'ID PM', key: 'ID PM' },
-    { label: 'Nama PM', key: 'NAMA PM' },
+    { label: 'NAMA PM', key: 'NAMA PM' },
     { label: 'NIK', key: 'NIK' },
-    { label: 'Nama PM Alternatif', key: 'NAMA PM ALT' },
-    { label: 'NIK Alternatif', key: 'NIK ALT' },
-    { label: 'No KK', key: 'NO KK' },
-    { label: 'Alamat', key: 'ALAMAT' },
-    { label: 'No HP', key: 'NO HP' },
-    { label: 'Asnaf', key: 'ASNAF' },
-    { label: 'Pekerjaan', key: 'PEKERJAAN' },
-    { label: 'Daerah', key: 'DAERAH' },
+    { label: 'NAMA PM ALT', key: 'NAMA PM ALT' },
+    { label: 'NIK ALT', key: 'NIK ALT' },
+    { label: 'NO KK', key: 'NO KK' },
+    { label: 'ALAMAT', key: 'ALAMAT' },
+    { label: 'DAERAH', key: 'DAERAH' },
+    { label: 'NO HP', key: 'NO HP' },
+    { label: 'ASNAF', key: 'ASNAF' },
+    { label: 'PEKERJAAN', key: 'PEKERJAAN' },
+    { label: 'CATATAN', key: 'CATATAN' },
     { label: 'Program Pernah Diterima', key: 'PENERIMAAN PROGRAM' },
-    { label: 'Total Penerimaan', key: 'TOTAL PENERIMAAN' }
+    { label: 'Total Penerimaan', key: 'TOTAL PENERIMAAN', isRupiah: true }
   ];
 
   return (
@@ -30,7 +30,7 @@ export default function DetailPmModal({ pm, onClose }) {
             <div key={field.key} className="col-span-1">
               <label className="block text-sm font-medium text-gray-500">{field.label}</label>
               <p className="text-gray-800 break-words">
-                {field.key === 'TOTAL PENERIMAAN' && pm[field.key]
+                {field.isRupiah && pm[field.key] !== undefined
                   ? `Rp ${pm[field.key].toLocaleString()}`
                   : pm[field.key] || '-'}
               </p>

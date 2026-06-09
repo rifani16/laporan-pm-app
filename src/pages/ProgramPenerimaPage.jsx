@@ -13,20 +13,17 @@ export default function ProgramPenerimaPage() {
   const [editItem, setEditItem] = useState(null);
   const rowsPerPage = 10;
 
-  // Di dalam ProgramPenerimaPage, saat mapping enrichedSalur
+  // Enrich data salur dengan informasi dari master (untuk efisiensi)
   const enrichedSalur = useMemo(() => {
     return salurData.map(s => {
       const master = masterData.find(m => m['ID PM'] === s['ID PM']);
-      const result = {
-        ...s, // ambil semua properti asli dari salurData (termasuk JUMLAH_PENERIMAAN)
-        'NAMA PM': master ? master['NAMA PM'] : s['NAMA PM'],
-        'DAERAH': s['DAERAH'] || (master ? master['DAERAH'] : ''),
-        'ALAMAT': s['ALAMAT'] || (master ? master['ALAMAT'] : ''),
-        'NIK': s['NIK'] || (master ? master['NIK'] : '')
+      return {
+        ...s,
+        NAMA_PM_UTAMA: master ? master['NAMA PM'] : '',
+        NAMA_ALTERNATIF: master ? master['NAMA PM ALT'] : '',
+        DAERAH: s['DAERAH'] || (master ? master['DAERAH'] : ''),
+        ALAMAT: s['ALAMAT'] || (master ? master['ALAMAT'] : '')
       };
-      // Debug: lihat apakah JUMLAH_PENERIMAAN ada
-      console.log('Data transaksi:', result['ID SALUR'], 'Jumlah:', result['JUMLAH_PENERIMAAN']);
-      return result;
     });
   }, [salurData, masterData]);
 
@@ -56,21 +53,13 @@ export default function ProgramPenerimaPage() {
       <div className="flex flex-wrap gap-4 bg-white p-4 rounded shadow">
         <div>
           <label className="block text-sm font-medium">Program</label>
-          <select
-            className="border rounded px-3 py-1 text-sm w-48 bg-white"
-            value={filterProgram}
-            onChange={e => handleFilterChange(setFilterProgram, e.target.value)}
-          >
+          <select className="border rounded px-3 py-1 text-sm w-48 bg-white" value={filterProgram} onChange={e => handleFilterChange(setFilterProgram, e.target.value)}>
             {programList.map(p => <option key={p} value={p}>{p === 'semua' ? 'Semua Program' : p}</option>)}
           </select>
         </div>
         <div>
           <label className="block text-sm font-medium">Daerah</label>
-          <select
-            className="border rounded px-3 py-1 text-sm w-48 bg-white"
-            value={filterDaerah}
-            onChange={e => handleFilterChange(setFilterDaerah, e.target.value)}
-          >
+          <select className="border rounded px-3 py-1 text-sm w-48 bg-white" value={filterDaerah} onChange={e => handleFilterChange(setFilterDaerah, e.target.value)}>
             {daerahList.map(d => <option key={d} value={d}>{d === 'semua' ? 'Semua Daerah' : d}</option>)}
           </select>
         </div>
@@ -82,7 +71,7 @@ export default function ProgramPenerimaPage() {
             <thead className="bg-gray-100">
               <tr>
                 <th className="p-2 text-left">No</th>
-                <th className="p-2 text-left">Nama Penerima</th>
+                <th className="p-2 text-left">Nama Penerima (Utama)</th>
                 <th className="p-2 text-left">Daerah</th>
                 <th className="p-2 text-left">Program</th>
                 <th className="p-2 text-left">Jumlah Penerimaan</th>
@@ -93,23 +82,13 @@ export default function ProgramPenerimaPage() {
               {paginatedData.map((item, idx) => (
                 <tr key={item['ID SALUR']} className="border-b">
                   <td className="p-2">{startIndex + idx + 1}</td>
-                  <td className="p-2 font-medium">{item['NAMA PM']}</td>
-                  <td className="p-2">{item['DAERAH'] || '-'}</td>
+                  <td className="p-2 font-medium">{item.NAMA_PM_UTAMA || '-'}</td>
+                  <td className="p-2">{item.DAERAH || '-'}</td>
                   <td className="p-2">{item['PROGRAM']}</td>
                   <td className="p-2">Rp {(item['JUMLAH PENERIMAAN'] || 0).toLocaleString()}</td>
                   <td className="p-2 space-x-1">
-                    <button
-                      onClick={() => setDetailItem(item)}
-                      className="bg-blue-600 text-white px-2 py-1 rounded text-xs"
-                    >
-                      Detail
-                    </button>
-                    <button
-                      onClick={() => setEditItem(item)}
-                      className="bg-teal-600 text-white px-2 py-1 rounded text-xs"
-                    >
-                      Edit
-                    </button>
+                    <button onClick={() => setDetailItem(item)} className="bg-blue-600 text-white px-2 py-1 rounded text-xs">Detail</button>
+                    <button onClick={() => setEditItem(item)} className="bg-teal-600 text-white px-2 py-1 rounded text-xs">Edit</button>
                   </td>
                 </tr>
               ))}
@@ -120,7 +99,7 @@ export default function ProgramPenerimaPage() {
         <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
       </div>
 
-      {detailItem && <DetailSalurModal data={detailItem} onClose={() => setDetailItem(null)} />}
+      {detailItem && <DetailSalurModal data={detailItem} masterData={masterData} onClose={() => setDetailItem(null)} />}
       {editItem && <EditSalurModal data={editItem} onClose={() => setEditItem(null)} onSave={updateSalur} />}
     </div>
   );

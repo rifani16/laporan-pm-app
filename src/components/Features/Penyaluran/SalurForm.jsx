@@ -6,11 +6,12 @@ export default function SalurForm() {
   const { masterData, refData, createSalur } = useData();
   const { showToast } = useToast();
   const [selectedPmId, setSelectedPmId] = useState('');
-  const [namaChoice, setNamaChoice] = useState('');
+  const [namaPenerima, setNamaPenerima] = useState('');
   const [form, setForm] = useState({
     PROGRAM: '',
     BENTUK_PENERIMAAN: { uang: false, barang: false },
-    JUMLAH_PENERIMAAN: ''
+    JUMLAH_PENERIMAAN: '',
+    KETERANGAN: ''
   });
   const [submitting, setSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -38,8 +39,8 @@ export default function SalurForm() {
     setSelectedPmId(pm.id);
     setSearchTerm(pm.label);
     setShowDropdown(false);
-    setNamaChoice('');
-    setForm({ PROGRAM: '', BENTUK_PENERIMAAN: { uang: false, barang: false }, JUMLAH_PENERIMAAN: '' });
+    setNamaPenerima('');
+    setForm({ PROGRAM: '', BENTUK_PENERIMAAN: { uang: false, barang: false }, JUMLAH_PENERIMAAN: '', KETERANGAN: '' });
   };
 
   const handleInputChange = (e) => {
@@ -80,54 +81,42 @@ export default function SalurForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Validasi
-    if (!selectedPmId) {
-      showToast('Pilih ID PM terlebih dahulu', 'error');
-      return;
-    }
-    if (!namaChoice) {
-      showToast('Pilih nama penerima', 'error');
-      return;
-    }
-    if (!form.PROGRAM) {
-      showToast('Pilih program bantuan', 'error');
-      return;
-    }
+    if (!selectedPmId) return showToast('Pilih ID PM', 'error');
+    if (!namaPenerima) return showToast('Pilih nama penerima', 'error');
+    if (!form.PROGRAM) return showToast('Pilih program', 'error');
     const { uang, barang } = form.BENTUK_PENERIMAAN;
-    if (!uang && !barang) {
-      showToast('Pilih minimal satu bentuk penerimaan (Uang / Barang)', 'error');
-      return;
-    }
-    if (!form.JUMLAH_PENERIMAAN || Number(form.JUMLAH_PENERIMAAN) <= 0) {
-      showToast('Isi jumlah penerimaan (nominal > 0)', 'error');
-      return;
-    }
+    if (!uang && !barang) return showToast('Pilih bentuk penerimaan', 'error');
+    const jumlah = Number(form.JUMLAH_PENERIMAAN);
+    if (isNaN(jumlah) || jumlah <= 0) return showToast('Jumlah penerimaan harus >0', 'error');
 
-    // Bentuk string untuk disimpan
     const bentukArr = [];
     if (uang) bentukArr.push('Uang');
     if (barang) bentukArr.push('Barang');
     const bentukPenerimaan = bentukArr.join(', ');
+    const selected = namaOptions.find(o => o.label === namaPenerima);
+    if (!selected) return showToast('Nama penerima tidak valid', 'error');
+
+    const payload = {
+      'ID PM': selectedPmId,
+      'NAMA PENERIMA': namaPenerima,
+      'NIK PENERIMA': selected.nik,
+      'DAERAH': selectedPm['DAERAH'] || '',
+      'ALAMAT': selectedPm['ALAMAT'] || '',
+      'PROGRAM': form.PROGRAM,
+      'BENTUK PENERIMAAN': bentukPenerimaan,
+      'JUMLAH PENERIMAAN': jumlah,
+      'KETERANGAN': form.KETERANGAN
+    };
 
     setSubmitting(true);
     try {
-      const result = await createSalur({
-        'ID PM': selectedPmId,
-        'NAMA PM': namaChoice,
-        'NIK': namaOptions.find(o => o.label === namaChoice)?.nik || '',
-        'DAERAH': selectedPm['DAERAH'] || '',
-        'ALAMAT': selectedPm['ALAMAT'] || '',
-        'PROGRAM': form.PROGRAM,
-        'BENTUK PENERIMAAN': bentukPenerimaan,
-        'JUMLAH PENERIMAAN': Number(form.JUMLAH_PENERIMAAN)
-      });
+      const result = await createSalur(payload);
       if (result.success) {
         showToast('Transaksi penyaluran berhasil disimpan', 'success');
-        // Reset form
         setSelectedPmId('');
         setSearchTerm('');
-        setNamaChoice('');
-        setForm({ PROGRAM: '', BENTUK_PENERIMAAN: { uang: false, barang: false }, JUMLAH_PENERIMAAN: '' });
+        setNamaPenerima('');
+        setForm({ PROGRAM: '', BENTUK_PENERIMAAN: { uang: false, barang: false }, JUMLAH_PENERIMAAN: '', KETERANGAN: '' });
       } else {
         showToast('Gagal: ' + (result.error || 'Unknown error'), 'error');
       }
@@ -156,11 +145,7 @@ export default function SalurForm() {
           {showDropdown && filteredOptions.length > 0 && (
             <ul className="absolute z-10 w-full bg-white border rounded shadow-md max-h-60 overflow-y-auto">
               {filteredOptions.map(opt => (
-                <li
-                  key={opt.id}
-                  onClick={() => handleSelectPm(opt)}
-                  className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                >
+                <li key={opt.id} onClick={() => handleSelectPm(opt)} className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm">
                   {opt.label}
                 </li>
               ))}
@@ -173,14 +158,12 @@ export default function SalurForm() {
             <label className="block text-sm font-medium">Pilih Nama Penerima</label>
             <select
               className="w-full border rounded p-2 bg-white"
-              value={namaChoice}
-              onChange={e => setNamaChoice(e.target.value)}
+              value={namaPenerima}
+              onChange={e => setNamaPenerima(e.target.value)}
               required
             >
               <option value="">-- Pilih Nama --</option>
-              {namaOptions.map(o => (
-                <option key={o.label} value={o.label}>{o.label}</option>
-              ))}
+              {namaOptions.map(o => <option key={o.label} value={o.label}>{o.label}</option>)}
             </select>
           </div>
         )}
@@ -202,21 +185,11 @@ export default function SalurForm() {
           <label className="block text-sm font-medium">Bentuk Penerimaan</label>
           <div className="flex gap-4 mt-1">
             <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={form.BENTUK_PENERIMAAN.uang}
-                onChange={() => handleCheckboxChange('uang')}
-                className="w-4 h-4"
-              />
+              <input type="checkbox" checked={form.BENTUK_PENERIMAAN.uang} onChange={() => handleCheckboxChange('uang')} />
               Uang
             </label>
             <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={form.BENTUK_PENERIMAAN.barang}
-                onChange={() => handleCheckboxChange('barang')}
-                className="w-4 h-4"
-              />
+              <input type="checkbox" checked={form.BENTUK_PENERIMAAN.barang} onChange={() => handleCheckboxChange('barang')} />
               Barang
             </label>
           </div>
@@ -234,11 +207,18 @@ export default function SalurForm() {
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="bg-teal-600 text-white px-4 py-2 rounded w-full hover:bg-teal-700"
-        >
+        <div>
+          <label className="block text-sm font-medium">Keterangan</label>
+          <textarea
+            className="w-full border rounded p-2 bg-white"
+            value={form.KETERANGAN}
+            onChange={e => setForm({ ...form, KETERANGAN: e.target.value })}
+            rows={2}
+            placeholder="Catatan tambahan (opsional)"
+          />
+        </div>
+
+        <button type="submit" disabled={submitting} className="bg-teal-600 text-white px-4 py-2 rounded w-full hover:bg-teal-700">
           {submitting ? 'Menyimpan...' : 'Simpan Penyaluran'}
         </button>
       </form>
