@@ -13,9 +13,9 @@ export default function EditModal({ item, onClose, onSave }) {
     'NO KK': item['NO KK'],
     'ALAMAT': item['ALAMAT'],
     'NO HP': item['NO HP'],
-    'ASNAF': item['ASNAF'],
+    'ASNAF': item['ASNAF'] || '',
     'PEKERJAAN': item['PEKERJAAN'],
-    'DAERAH': item['DAERAH']
+    'DAERAH': item['DAERAH'] || '',
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -47,18 +47,20 @@ export default function EditModal({ item, onClose, onSave }) {
               {k === 'ASNAF' ? (
                 <select
                   className="w-full border rounded p-2"
-                  value={form[k]}
+                  value={form[k] || ''}
                   onChange={e => setForm({ ...form, [k]: e.target.value })}
                 >
-                  {refData.asnaf.map(a => <option key={a}>{a}</option>)}
+                  <option value="">-- Pilih Asnaf --</option>
+                  {refData.asnaf.map(a => <option key={a} value={a}>{a}</option>)}
                 </select>
               ) : k === 'DAERAH' ? (
                 <select
                   className="w-full border rounded p-2"
-                  value={form[k]}
+                  value={form[k] || ''}
                   onChange={e => setForm({ ...form, [k]: e.target.value })}
                 >
-                  {refData.daerah.map(d => <option key={d}>{d}</option>)}
+                  <option value="">-- Pilih Daerah --</option>
+                  {refData.daerah.map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
               ) : (
                 <input
@@ -77,9 +79,8 @@ export default function EditModal({ item, onClose, onSave }) {
           <button
             onClick={handleSave}
             disabled={submitting}
-            className={`px-4 py-2 rounded text-white ${
-              submitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-teal-600 hover:bg-teal-700'
-            }`}
+            className={`px-4 py-2 rounded text-white ${submitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-teal-600 hover:bg-teal-700'
+              }`}
           >
             {submitting ? 'Menyimpan...' : 'Simpan'}
           </button>
