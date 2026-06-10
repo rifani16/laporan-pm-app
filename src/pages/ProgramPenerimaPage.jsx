@@ -8,19 +8,18 @@ export default function ProgramPenerimaPage() {
   const { salurData, masterData, refData, updateSalur } = useData();
   const [filterProgram, setFilterProgram] = useState('semua');
   const [filterDaerah, setFilterDaerah] = useState('semua');
+  const [searchNama, setSearchNama] = useState(''); // State pencarian nama PM
   const [currentPage, setCurrentPage] = useState(1);
   const [detailItem, setDetailItem] = useState(null);
   const [editItem, setEditItem] = useState(null);
   const rowsPerPage = 10;
 
-  // Enrich data salur dengan informasi dari master (untuk efisiensi)
   const enrichedSalur = useMemo(() => {
     return salurData.map(s => {
       const master = masterData.find(m => m['ID PM'] === s['ID PM']);
       return {
         ...s,
         NAMA_PM_UTAMA: master ? master['NAMA PM'] : '',
-        NAMA_ALTERNATIF: master ? master['NAMA PM ALT'] : '',
         DAERAH: s['DAERAH'] || (master ? master['DAERAH'] : ''),
         ALAMAT: s['ALAMAT'] || (master ? master['ALAMAT'] : '')
       };
@@ -31,9 +30,10 @@ export default function ProgramPenerimaPage() {
     return enrichedSalur.filter(item => {
       const matchProgram = filterProgram === 'semua' || item['PROGRAM'] === filterProgram;
       const matchDaerah = filterDaerah === 'semua' || item['DAERAH'] === filterDaerah;
-      return matchProgram && matchDaerah;
+      const matchNama = !searchNama.trim() || item.NAMA_PM_UTAMA.toLowerCase().includes(searchNama.toLowerCase());
+      return matchProgram && matchDaerah && matchNama;
     });
-  }, [enrichedSalur, filterProgram, filterDaerah]);
+  }, [enrichedSalur, filterProgram, filterDaerah, searchNama]);
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
@@ -63,6 +63,16 @@ export default function ProgramPenerimaPage() {
             {daerahList.map(d => <option key={d} value={d}>{d === 'semua' ? 'Semua Daerah' : d}</option>)}
           </select>
         </div>
+        <div>
+          <label className="block text-sm font-medium">Cari Nama PM</label>
+          <input
+            type="text"
+            placeholder="Ketik nama PM..."
+            className="border rounded px-3 py-1 text-sm w-56 bg-white"
+            value={searchNama}
+            onChange={e => { setSearchNama(e.target.value); setCurrentPage(1); }}
+          />
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -86,9 +96,11 @@ export default function ProgramPenerimaPage() {
                   <td className="p-2">{item.DAERAH || '-'}</td>
                   <td className="p-2">{item['PROGRAM']}</td>
                   <td className="p-2">Rp {(item['JUMLAH PENERIMAAN'] || 0).toLocaleString()}</td>
-                  <td className="p-2 space-x-1">
-                    <button onClick={() => setDetailItem(item)} className="bg-blue-600 text-white px-2 py-1 rounded text-xs">Detail</button>
-                    <button onClick={() => setEditItem(item)} className="bg-teal-600 text-white px-2 py-1 rounded text-xs">Edit</button>
+                  <td className="p-2">
+                    <div className="flex flex-col sm:flex-row gap-1">
+                      <button onClick={() => setDetailItem(item)} className="bg-blue-600 text-white px-2 py-1 rounded text-xs whitespace-nowrap">Detail</button>
+                      <button onClick={() => setEditItem(item)} className="bg-teal-600 text-white px-2 py-1 rounded text-xs whitespace-nowrap">Edit</button>
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -67,15 +67,15 @@ export default function TambahPmModal({ onClose, onSuccess }) {
             <div><label className="block text-sm font-medium">NO KK</label><input className="w-full border rounded p-2" value={form['NO KK']} onChange={e => handleChange('NO KK', e.target.value)} /></div>
             <div><label className="block text-sm font-medium">NO HP</label><input className="w-full border rounded p-2" value={form['NO HP']} onChange={e => handleChange('NO HP', e.target.value)} /></div>
           </div>
-          {/* Baris 4: ASNAF dan PEKERJAAN */}
+          {/* Baris 4: ALAMAT DAN DAERAH */}
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <div><label className="block text-sm font-medium">ALAMAT</label><input className="w-full border rounded p-2" value={form['ALAMAT']} onChange={e => handleChange('ALAMAT', e.target.value)} /></div>
+            <div><label className="block text-sm font-medium">DAERAH</label><select className="w-full border rounded p-2" value={form['DAERAH']} onChange={e => handleChange('DAERAH', e.target.value)}><option value="">-- Pilih Daerah --</option>{refData.daerah.map(d => <option key={d}>{d}</option>)}</select></div>
+          </div>
+          {/* Baris 5: ASNAF dan PEKERJAAN */}
           <div className="grid grid-cols-2 gap-3 mb-3">
             <div><label className="block text-sm font-medium">ASNAF</label><select className="w-full border rounded p-2" value={form['ASNAF']} onChange={e => handleChange('ASNAF', e.target.value)}><option value="">-- Pilih Asnaf --</option>{refData.asnaf.map(a => <option key={a}>{a}</option>)}</select></div>
             <div><label className="block text-sm font-medium">PEKERJAAN</label><input className="w-full border rounded p-2" value={form['PEKERJAAN']} onChange={e => handleChange('PEKERJAAN', e.target.value)} /></div>
-          </div>
-          {/* Baris 5: DAERAH dan ALAMAT */}
-          <div className="grid grid-cols-2 gap-3 mb-3">
-            <div><label className="block text-sm font-medium">DAERAH</label><select className="w-full border rounded p-2" value={form['DAERAH']} onChange={e => handleChange('DAERAH', e.target.value)}><option value="">-- Pilih Daerah --</option>{refData.daerah.map(d => <option key={d}>{d}</option>)}</select></div>
-            <div><label className="block text-sm font-medium">ALAMAT</label><input className="w-full border rounded p-2" value={form['ALAMAT']} onChange={e => handleChange('ALAMAT', e.target.value)} /></div>
           </div>
           {/* Baris 6: CATATAN (full width) */}
           <div className="mb-3">

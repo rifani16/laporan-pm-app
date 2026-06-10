@@ -31,9 +31,11 @@ export default function MasterTable({ data, onUpdate, currentPage, onPageChange,
                 <td className="p-2 font-medium">{pm['NAMA PM']}</td>
                 <td className="p-2">{pm['DAERAH'] || '-'}</td>
                 <td className="p-2">Rp {(pm['TOTAL PENERIMAAN'] || 0).toLocaleString()}</td>
-                <td className="p-2 space-x-1">
-                  <button onClick={() => setDetailItem(pm)} className="bg-blue-600 text-white px-2 py-1 rounded text-xs">Detail</button>
-                  <button onClick={() => setEditItem(pm)} className="bg-teal-600 text-white px-2 py-1 rounded text-xs">Edit</button>
+                <td className="p-2">
+                  <div className="flex flex-col sm:flex-row gap-1">
+                    <button onClick={() => setDetailItem(pm)} className="bg-blue-600 text-white px-2 py-1 rounded text-xs">Detail</button>
+                    <button onClick={() => setEditItem(pm)} className="bg-teal-600 text-white px-2 py-1 rounded text-xs">Edit</button>
+                  </div>
                 </td>
               </tr>
             ))}
