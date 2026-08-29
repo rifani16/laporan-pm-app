@@ -4,7 +4,7 @@ import MasterTable from '../components/Features/MasterData/MasterTable';
 import TambahPmModal from '../components/Features/MasterData/TambahPmModal';
 
 export default function MasterDataPage() {
-  const { masterData, updateMaster, loading, refData } = useData();
+  const { masterData, updateMaster, deleteMaster, loading, refData } = useData();
   const [showModal, setShowModal] = useState(false);
   const [filterDaerah, setFilterDaerah] = useState('semua');
   const [currentPage, setCurrentPage] = useState(1);
@@ -45,7 +45,7 @@ export default function MasterDataPage() {
         <input type="text" placeholder="Cari nama PM..." className="border rounded px-3 py-1 text-sm flex-1 min-w-[150px]" value={searchTerm} onChange={handleSearchChange} />
         <button onClick={() => setShowModal(true)} className="bg-teal-600 text-white px-4 py-2 rounded text-sm whitespace-nowrap">+ Tambah PM</button>
       </div>
-      <MasterTable data={filteredMaster} onUpdate={updateMaster} currentPage={currentPage} onPageChange={setCurrentPage} />
+      <MasterTable data={filteredMaster} onUpdate={updateMaster} onDelete={deleteMaster} currentPage={currentPage} onPageChange={setCurrentPage} />
       {showModal && <TambahPmModal onClose={() => setShowModal(false)} />}
     </div>
   );

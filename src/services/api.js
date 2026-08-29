@@ -20,6 +20,15 @@ export const editMaster = async (idPm, updatedFields) => {
   return await res.json();
 };
 
+export const deleteMaster = async (idPm) => {
+  const res = await fetch(`${API_BASE}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "HAPUS_MASTER", data: { "ID PM": idPm } }),
+  });
+  return await res.json();
+};
+
 export const addMaster = async (payload) => {
   const res = await fetch(`${API_BASE}`, {
     method: "POST",
@@ -43,6 +52,15 @@ export const editSalur = async (payload) => {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "EDIT_SALUR", data: payload }),
+  });
+  return await res.json();
+};
+
+export const deleteSalur = async (idSalur) => {
+  const res = await fetch(`${API_BASE}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "HAPUS_PM_PROGRAM", data: { "ID SALUR": idSalur } }),
   });
   return await res.json();
 };

@@ -3,15 +3,18 @@ import { useData } from '../hooks/useData';
 import Pagination from '../components/Common/Pagination';
 import DetailSalurModal from '../components/Features/Penyaluran/DetailSalurModal';
 import EditSalurModal from '../components/Features/Penyaluran/EditSalurModal';
+import { useToast } from '../hooks/useToast';
 
 export default function ProgramPenerimaPage() {
-  const { salurData, masterData, refData, updateSalur } = useData();
+  const { salurData, masterData, refData, updateSalur, deleteSalur } = useData();
+  const { showToast } = useToast();
   const [filterProgram, setFilterProgram] = useState('semua');
   const [filterDaerah, setFilterDaerah] = useState('semua');
   const [searchNama, setSearchNama] = useState(''); // State pencarian nama PM
   const [currentPage, setCurrentPage] = useState(1);
   const [detailItem, setDetailItem] = useState(null);
   const [editItem, setEditItem] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
   const rowsPerPage = 10;
 
   const masterById = useMemo(
@@ -48,6 +51,30 @@ export default function ProgramPenerimaPage() {
   const handleFilterChange = (setter, value) => {
     setter(value);
     setCurrentPage(1);
+  };
+
+  const handleDelete = async (item) => {
+    const idSalur = item['ID SALUR'];
+    const namaPenerima = item['NAMA PENERIMA'] || item.NAMA_PM_UTAMA || '-';
+    const confirmed = window.confirm(
+      `Hapus penyaluran untuk "${namaPenerima}" pada program "${item['PROGRAM']}"?\n\nTindakan ini tidak dapat dibatalkan.`
+    );
+    if (!confirmed) return;
+
+    setDeletingId(idSalur);
+    try {
+      const result = await deleteSalur(idSalur);
+      if (result?.success) {
+        showToast('Data penyaluran berhasil dihapus', 'success');
+        if (paginatedData.length === 1 && currentPage > 1) setCurrentPage(currentPage - 1);
+      } else {
+        showToast('Gagal menghapus penyaluran: ' + (result?.error || 'Unknown error'), 'error');
+      }
+    } catch (err) {
+      showToast('Error: ' + err.message, 'error');
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const programList = ['semua', ...(refData.program || [])];
@@ -106,6 +133,13 @@ export default function ProgramPenerimaPage() {
                     <div className="flex flex-col sm:flex-row gap-1">
                       <button onClick={() => setDetailItem(item)} className="bg-blue-600 text-white px-2 py-1 rounded text-xs whitespace-nowrap">Detail</button>
                       <button onClick={() => setEditItem(item)} className="bg-teal-600 text-white px-2 py-1 rounded text-xs whitespace-nowrap">Edit</button>
+                      <button
+                        onClick={() => handleDelete(item)}
+                        disabled={deletingId === item['ID SALUR']}
+                        className="bg-red-600 text-white px-2 py-1 rounded text-xs whitespace-nowrap disabled:opacity-50"
+                      >
+                        {deletingId === item['ID SALUR'] ? 'Menghapus...' : 'Hapus'}
+                      </button>
                     </div>
                   </td>
                 </tr>

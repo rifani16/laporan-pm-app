@@ -1,6 +1,14 @@
 import { useCallback, useMemo } from 'react';
 import { DataContext } from './DataContext';
-import { fetchAllData, editMaster, addSalur, addMaster, editSalur } from '../services/api';
+import {
+  fetchAllData,
+  editMaster,
+  addSalur,
+  addMaster,
+  editSalur,
+  deleteMaster as requestDeleteMaster,
+  deleteSalur as requestDeleteSalur
+} from '../services/api';
 import useCache from '../hooks/useCache';
 
 const EMPTY_LIST = [];
@@ -35,6 +43,18 @@ export const DataProvider = ({ children }) => {
     return result;
   }, [refreshData]);
 
+  const deleteMaster = useCallback(async (idPm) => {
+    const result = await requestDeleteMaster(idPm);
+    if (result.success) await refreshData();
+    return result;
+  }, [refreshData]);
+
+  const deleteSalur = useCallback(async (idSalur) => {
+    const result = await requestDeleteSalur(idSalur);
+    if (result.success) await refreshData();
+    return result;
+  }, [refreshData]);
+
   const masterData = data?.master || EMPTY_LIST;
   const salurData = data?.salur || EMPTY_LIST;
   const refData = data?.ref || EMPTY_REF_DATA;
@@ -48,8 +68,10 @@ export const DataProvider = ({ children }) => {
     updateMaster,
     createSalur,
     createMaster,
-    updateSalur
-  }), [masterData, salurData, refData, loading, refreshData, updateMaster, createSalur, createMaster, updateSalur]);
+    updateSalur,
+    deleteMaster,
+    deleteSalur
+  }), [masterData, salurData, refData, loading, refreshData, updateMaster, createSalur, createMaster, updateSalur, deleteMaster, deleteSalur]);
 
   return (
     <DataContext.Provider value={contextValue}>

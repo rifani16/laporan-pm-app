@@ -38,3 +38,5 @@ yarn-error.log*
 
 # Optional: ignore local config files that may contain sensitive data
 *.local
+
+gas/
