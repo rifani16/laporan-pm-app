@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import ConfirmDialog from '../components/Common/ConfirmDialog';
 import Dialog from '../components/Common/Dialog';
+import Pagination from '../components/Common/Pagination';
 import { useData } from '../hooks/useData';
 import { useToast } from '../hooks/useToast';
 
@@ -24,6 +25,8 @@ export default function ProgramManagementPage() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const usageCounts = useMemo(() => {
     const counts = new Map();
@@ -34,11 +37,14 @@ export default function ProgramManagementPage() {
     return counts;
   }, [salurData]);
 
-  const programs = useMemo(() => (
+  const filteredPrograms = useMemo(() => (
     [...(refData.program || [])]
       .sort((a, b) => a.localeCompare(b, 'id-ID'))
       .filter(name => normalizeName(name).includes(normalizeName(search)))
   ), [refData.program, search]);
+  const totalPages = Math.ceil(filteredPrograms.length / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const programs = filteredPrograms.slice(startIndex, startIndex + rowsPerPage);
 
   const programExists = (name, ignoredName = '') => {
     const target = normalizeName(name);
@@ -60,6 +66,7 @@ export default function ProgramManagementPage() {
       const result = await createProgram(name);
       if (!result.success) throw new Error(result.error || 'Gagal menambahkan program');
       setNewName('');
+      setCurrentPage(1);
       showToast(result.message || 'Program berhasil ditambahkan');
     } catch (error) {
       showToast(error.message || 'Gagal menambahkan program', 'error');
@@ -112,6 +119,7 @@ export default function ProgramManagementPage() {
       const result = await deleteProgram(deleteTarget);
       if (!result.success) throw new Error(result.error || 'Gagal menghapus program');
       setDeleteTarget(null);
+      if (programs.length === 1 && currentPage > 1) setCurrentPage(currentPage - 1);
       showToast(result.message || 'Program berhasil dihapus');
     } catch (error) {
       showToast(error.message || 'Gagal menghapus program', 'error');
@@ -162,7 +170,7 @@ export default function ProgramManagementPage() {
             <input
               type="search"
               value={search}
-              onChange={event => setSearch(event.target.value)}
+              onChange={event => { setSearch(event.target.value); setCurrentPage(1); }}
               className="min-h-11 w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-200"
               placeholder="Cari program..."
             />
@@ -213,12 +221,19 @@ export default function ProgramManagementPage() {
           </table>
         </div>
 
-        {!loading && programs.length === 0 && (
+        {!loading && filteredPrograms.length === 0 && (
           <p className="p-8 text-center text-sm text-gray-500">
             {search ? 'Program tidak ditemukan.' : 'Belum ada program.'}
           </p>
         )}
         {loading && <p className="p-8 text-center text-sm text-gray-500">Memuat program...</p>}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={setRowsPerPage}
+        />
       </section>
 
       {editTarget && (

@@ -5,7 +5,7 @@ import Pagination from '../../Common/Pagination';
 import ConfirmDialog from '../../Common/ConfirmDialog';
 import { useToast } from '../../../hooks/useToast';
 
-export default function MasterTable({ data, onUpdate, onDelete, currentPage, onPageChange, rowsPerPage = 10 }) {
+export default function MasterTable({ data, onUpdate, onDelete, currentPage, onPageChange, rowsPerPage = 10, onRowsPerPageChange }) {
   const { showToast } = useToast();
   const [editItem, setEditItem] = useState(null);
   const [detailItem, setDetailItem] = useState(null);
@@ -75,7 +75,13 @@ export default function MasterTable({ data, onUpdate, onDelete, currentPage, onP
         </table>
         {data.length === 0 && <div className="p-6 text-center text-gray-500">Belum ada data PM yang sesuai.</div>}
       </div>
-      <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={onPageChange} />
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={onPageChange}
+        rowsPerPage={rowsPerPage}
+        onRowsPerPageChange={onRowsPerPageChange}
+      />
       {editItem && <EditModal item={editItem} onClose={() => setEditItem(null)} onSave={onUpdate} />}
       {detailItem && <DetailPmModal pm={detailItem} onClose={() => setDetailItem(null)} />}
       <ConfirmDialog

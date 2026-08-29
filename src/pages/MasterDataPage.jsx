@@ -8,6 +8,7 @@ export default function MasterDataPage() {
   const [showModal, setShowModal] = useState(false);
   const [filterDaerah, setFilterDaerah] = useState('semua');
   const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredMaster = (masterData || [])
@@ -53,7 +54,15 @@ export default function MasterDataPage() {
         <button onClick={() => setShowModal(true)} className="min-h-11 whitespace-nowrap rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700">+ Tambah PM</button>
       </div>
       <p className="mb-4 text-sm text-gray-600" aria-live="polite">Menampilkan {filteredMaster.length} dari {masterData.length} PM</p>
-      <MasterTable data={filteredMaster} onUpdate={updateMaster} onDelete={deleteMaster} currentPage={currentPage} onPageChange={setCurrentPage} />
+      <MasterTable
+        data={filteredMaster}
+        onUpdate={updateMaster}
+        onDelete={deleteMaster}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        rowsPerPage={rowsPerPage}
+        onRowsPerPageChange={setRowsPerPage}
+      />
       {showModal && <TambahPmModal onClose={() => setShowModal(false)} />}
     </div>
   );

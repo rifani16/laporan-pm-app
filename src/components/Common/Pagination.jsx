@@ -1,5 +1,20 @@
-export default function Pagination({ currentPage, totalPages, onPageChange }) {
-  if (totalPages <= 1) return null;
+const ROW_OPTIONS = [10, 20, 30, 50];
+
+export default function Pagination({
+  currentPage,
+  totalPages,
+  onPageChange,
+  rowsPerPage = 10,
+  onRowsPerPageChange
+}) {
+  if (totalPages <= 1 && !onRowsPerPageChange) return null;
+
+  const handleRowsChange = (event) => {
+    const requestedRows = Number(event.target.value);
+    const nextRows = ROW_OPTIONS.includes(requestedRows) ? requestedRows : 10;
+    onRowsPerPageChange(nextRows);
+    onPageChange(1);
+  };
 
   const getPageNumbers = () => {
     const pages = [];
@@ -31,7 +46,24 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
   const pageNumbers = getPageNumbers();
 
   return (
-    <nav aria-label="Navigasi halaman" className="flex flex-wrap items-center justify-center gap-2 border-t bg-white p-3">
+    <div className="flex flex-wrap items-center justify-between gap-3 border-t bg-white p-3">
+      {onRowsPerPageChange && (
+        <label className="flex min-h-11 items-center gap-2 text-sm text-gray-700">
+          <span>Baris per halaman</span>
+          <select
+            value={rowsPerPage}
+            onChange={handleRowsChange}
+            className="min-h-11 rounded-lg border border-gray-300 bg-white px-3 py-2 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-200"
+            aria-label="Jumlah baris per halaman"
+          >
+            {ROW_OPTIONS.map(option => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+        </label>
+      )}
+      {totalPages > 1 && (
+      <nav aria-label="Navigasi halaman" className="flex flex-1 flex-wrap items-center justify-center gap-2 sm:justify-end">
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
@@ -67,6 +99,8 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
       >
         Berikutnya
       </button>
-    </nav>
+      </nav>
+      )}
+    </div>
   );
 }

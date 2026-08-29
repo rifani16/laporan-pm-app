@@ -13,11 +13,11 @@ export default function ProgramPenerimaPage() {
   const [filterDaerah, setFilterDaerah] = useState('semua');
   const [searchNama, setSearchNama] = useState(''); // State pencarian nama PM
   const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [detailItem, setDetailItem] = useState(null);
   const [editItem, setEditItem] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
-  const rowsPerPage = 10;
 
   const masterById = useMemo(
     () => new Map(masterData.map(master => [master['ID PM'], master])),
@@ -168,7 +168,13 @@ export default function ProgramPenerimaPage() {
           </table>
           {filteredData.length === 0 && <div className="p-4 text-center text-gray-500">Tidak ada data untuk filter ini.</div>}
         </div>
-        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={setRowsPerPage}
+        />
       </div>
 
       {detailItem && <DetailSalurModal data={detailItem} masterData={masterData} onClose={() => setDetailItem(null)} />}
