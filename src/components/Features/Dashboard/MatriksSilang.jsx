@@ -56,8 +56,8 @@ export default function MatriksSilang({ salurData }) {
               {programList.map(p => {
                 const value = matriks[d]?.[p] || 0;
                 return (
-                  <td key={p} className="p-2 border text-right whitespace-nowrap">
-                    {value > 0 ? `Rp ${value.toLocaleString()}` : '-'}
+                  <td key={p} className="numeric p-2 border text-right whitespace-nowrap">
+                    {value > 0 ? `Rp ${value.toLocaleString('id-ID')}` : '-'}
                   </td>
                 );
               })}

@@ -3,14 +3,16 @@ import { useReducer, useEffect, useCallback } from 'react';
 const CACHE_TTL = 30 * 60 * 1000; // 30 menit (lebih lama)
 const initialRequests = new Map();
 
-const initialState = { data: null, loading: true };
+const initialState = { data: null, loading: true, error: null };
 
 function cacheReducer(state, action) {
   switch (action.type) {
     case 'SET_DATA':
-      return { data: action.payload, loading: false };
+      return { data: action.payload, loading: false, error: null };
     case 'SET_LOADING':
-      return { ...state, loading: action.payload };
+      return { ...state, loading: action.payload, error: null };
+    case 'SET_ERROR':
+      return { ...state, loading: false, error: action.payload };
     default:
       return state;
   }
@@ -28,19 +30,23 @@ function fetchInitialData(key, fetcher) {
 
 export default function useCache(key, fetcher) {
   const [state, dispatch] = useReducer(cacheReducer, initialState);
-  const { data, loading } = state;
+  const { data, loading, error } = state;
 
   const loadData = useCallback(async (force = false) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
       if (!force) {
-        const cached = localStorage.getItem(key);
-        if (cached) {
-          const { timestamp, value } = JSON.parse(cached);
-          if (Date.now() - timestamp < CACHE_TTL) {
-            dispatch({ type: 'SET_DATA', payload: value });
-            return;
+        try {
+          const cached = localStorage.getItem(key);
+          if (cached) {
+            const { timestamp, value } = JSON.parse(cached);
+            if (Date.now() - timestamp < CACHE_TTL) {
+              dispatch({ type: 'SET_DATA', payload: value });
+              return;
+            }
           }
+        } catch {
+          localStorage.removeItem(key);
         }
       }
       // Deduplikasi request awal yang dijalankan dua kali oleh StrictMode.
@@ -50,7 +56,7 @@ export default function useCache(key, fetcher) {
       dispatch({ type: 'SET_DATA', payload: fresh });
     } catch (err) {
       console.error('Gagal mengambil data:', err);
-      dispatch({ type: 'SET_LOADING', payload: false });
+      dispatch({ type: 'SET_ERROR', payload: err });
     }
   }, [key, fetcher]);
 
@@ -65,5 +71,5 @@ export default function useCache(key, fetcher) {
     dispatch({ type: 'SET_DATA', payload: newData });
   }, []);
 
-  return { data, loading, setData, invalidateCache };
+  return { data, loading, error, setData, invalidateCache };
 }

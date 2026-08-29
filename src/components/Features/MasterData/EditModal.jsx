@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useData } from '@/hooks/useData';
 import { useToast } from '@/hooks/useToast';
+import Dialog from '@/components/Common/Dialog';
 
 export default function EditModal({ item, onClose, onSave }) {
   const { refData } = useData();
@@ -21,6 +22,12 @@ export default function EditModal({ item, onClose, onSave }) {
   const [submitting, setSubmitting] = useState(false);
 
   const handleSave = async () => {
+    for (const field of ['NIK', 'NIK ALT', 'NO KK']) {
+      if (form[field] && String(form[field]).length !== 16) {
+        showToast(`${field} harus terdiri dari 16 digit`, 'error');
+        return;
+      }
+    }
     setSubmitting(true);
     try {
       const result = await onSave(item['ID PM'], form);
@@ -38,40 +45,42 @@ export default function EditModal({ item, onClose, onSave }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-lg w-full p-5">
-        <h2 className="text-xl font-bold mb-4">Edit Data PM</h2>
-        <div className="space-y-3 max-h-96 overflow-y-auto">
+    <Dialog title="Edit Data PM" onClose={onClose} closeDisabled={submitting} maxWidth="max-w-lg">
+        <div className="space-y-3">
           {/* Sama seperti Tambah, tapi tanpa ID PM dan tidak perlu checkbox dll */}
           {/* Render semua field termasuk CATATAN */}
-          {Object.keys(form).map(k => (
+          {Object.keys(form).map(k => {
+            const fieldId = `edit-pm-${k.toLowerCase().replace(/\s+/g, '-')}`;
+            return (
             <div key={k}>
-              <label className="block text-sm font-medium">{k}</label>
+              <label htmlFor={fieldId} className="block text-sm font-medium">{k}</label>
               {k === 'ASNAF' ? (
-                <select className="w-full border rounded p-2" value={form[k]} onChange={e => setForm({ ...form, [k]: e.target.value })}>
+                <select id={fieldId} className="min-h-11 w-full rounded-lg border p-2" value={form[k]} onChange={e => setForm({ ...form, [k]: e.target.value })}>
                   <option value="">-- Pilih Asnaf --</option>
                   {refData.asnaf.map(a => <option key={a}>{a}</option>)}
                 </select>
               ) : k === 'DAERAH' ? (
-                <select className="w-full border rounded p-2" value={form[k]} onChange={e => setForm({ ...form, [k]: e.target.value })}>
+                <select id={fieldId} className="min-h-11 w-full rounded-lg border p-2" value={form[k]} onChange={e => setForm({ ...form, [k]: e.target.value })}>
                   <option value="">-- Pilih Daerah --</option>
                   {refData.daerah.map(d => <option key={d}>{d}</option>)}
                 </select>
               ) : k === 'CATATAN' ? (
-                <textarea className="w-full border rounded p-2" rows={2} value={form[k]} onChange={e => setForm({ ...form, [k]: e.target.value })} placeholder="Catatan tambahan" />
+                <textarea id={fieldId} className="w-full rounded-lg border p-2" rows={2} value={form[k]} onChange={e => setForm({ ...form, [k]: e.target.value })} placeholder="Catatan tambahan" />
+              ) : ['NIK', 'NIK ALT', 'NO KK'].includes(k) ? (
+                <input id={fieldId} inputMode="numeric" maxLength={16} className="min-h-11 w-full rounded-lg border p-2 numeric" value={form[k] || ''} onChange={e => setForm({ ...form, [k]: e.target.value.replace(/\D/g, '').slice(0, 16) })} />
               ) : (
-                <input className="w-full border rounded p-2" value={form[k] || ''} onChange={e => setForm({ ...form, [k]: e.target.value })} />
+                <input id={fieldId} className="min-h-11 w-full rounded-lg border p-2" value={form[k] || ''} onChange={e => setForm({ ...form, [k]: e.target.value })} />
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
         <div className="flex justify-end gap-2 mt-4">
-          <button onClick={onClose} disabled={submitting} className="px-4 py-2 border rounded">Batal</button>
-          <button onClick={handleSave} disabled={submitting} className={`px-4 py-2 rounded text-white ${submitting ? 'bg-gray-400' : 'bg-teal-600'}`}>
+          <button onClick={onClose} disabled={submitting} className="min-h-11 px-4 py-2 border rounded-lg">Batal</button>
+          <button onClick={handleSave} disabled={submitting} className={`min-h-11 px-4 py-2 rounded-lg text-white ${submitting ? 'bg-gray-400' : 'bg-teal-600'}`}>
             {submitting ? 'Menyimpan...' : 'Simpan'}
           </button>
         </div>
-      </div>
-    </div>
+    </Dialog>
   );
 }

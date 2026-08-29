@@ -21,16 +21,24 @@ export default function DashboardPage() {
     });
   }, [salurData, filterDaerah, filterProgram]);
 
-  if (loading) return <div className="text-center py-10">Memuat dashboard...</div>;
+  const resetFilters = () => {
+    setFilterDaerah('semua');
+    setFilterProgram('semua');
+  };
+
+  if (loading && salurData.length === 0 && masterData.length === 0) {
+    return <div className="text-center py-10" role="status">Memuat dashboard...</div>;
+  }
 
   return (
     <div className="space-y-6">
       {/* Header dan filter responsif */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <h1 className="text-2xl font-bold text-gray-800">Dashboard Rangkuman</h1>
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row">
           <select
-            className="border rounded px-3 py-1 text-sm bg-white"
+            aria-label="Filter dashboard berdasarkan daerah"
+            className="min-h-11 rounded-lg border bg-white px-3 py-2 text-sm"
             value={filterDaerah}
             onChange={e => setFilterDaerah(e.target.value)}
           >
@@ -39,7 +47,8 @@ export default function DashboardPage() {
             ))}
           </select>
           <select
-            className="border rounded px-3 py-1 text-sm bg-white"
+            aria-label="Filter dashboard berdasarkan program"
+            className="min-h-11 rounded-lg border bg-white px-3 py-2 text-sm"
             value={filterProgram}
             onChange={e => setFilterProgram(e.target.value)}
           >
@@ -47,6 +56,9 @@ export default function DashboardPage() {
               <option key={p} value={p}>{p === 'semua' ? 'Semua Program' : p}</option>
             ))}
           </select>
+          {(filterDaerah !== 'semua' || filterProgram !== 'semua') && (
+            <button onClick={resetFilters} className="min-h-11 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50">Reset</button>
+          )}
         </div>
       </div>
 

@@ -33,16 +33,16 @@ export default function TabelPerProgram({ salurData }) {
         <thead className="bg-gray-100">
           <tr>
             <th className="p-2 text-left whitespace-nowrap">Program</th>
-            <th className="p-2 text-left whitespace-nowrap">Jumlah Penerima</th>
-            <th className="p-2 text-left whitespace-nowrap">Total Dana</th>
+            <th className="p-2 text-right whitespace-nowrap">Jumlah Penerima</th>
+            <th className="p-2 text-right whitespace-nowrap">Total Dana</th>
           </tr>
         </thead>
         <tbody>
           {data.map(row => (
             <tr key={row.program} className="border-b">
               <td className="p-2 whitespace-nowrap">{row.program}</td>
-              <td className="p-2 whitespace-nowrap">{row.jumlahPenerima}</td>
-              <td className="p-2 whitespace-nowrap">Rp {row.totalDana.toLocaleString()}</td>
+              <td className="numeric p-2 text-right whitespace-nowrap">{row.jumlahPenerima.toLocaleString('id-ID')}</td>
+              <td className="numeric p-2 text-right whitespace-nowrap">Rp {row.totalDana.toLocaleString('id-ID')}</td>
             </tr>
           ))}
         </tbody>

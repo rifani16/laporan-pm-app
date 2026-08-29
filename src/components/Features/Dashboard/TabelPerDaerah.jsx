@@ -37,18 +37,18 @@ export default function TabelPerDaerah({ salurData }) {
         <thead className="bg-gray-100">
           <tr>
             <th className="p-2 text-left">Daerah</th>
-            <th className="p-2 text-left">Jumlah Penerima</th>
-            <th className="p-2 text-left">Frekuensi Transaksi</th>
-            <th className="p-2 text-left">Total Dana</th>
+            <th className="p-2 text-right">Jumlah Penerima</th>
+            <th className="p-2 text-right">Frekuensi Transaksi</th>
+            <th className="p-2 text-right">Total Dana</th>
           </tr>
         </thead>
         <tbody>
           {data.map(row => (
             <tr key={row.daerah} className="border-b">
               <td className="p-2 font-medium whitespace-nowrap">{row.daerah}</td>
-              <td className="p-2 whitespace-nowrap">{row.jumlahPenerima}</td>
-              <td className="p-2 whitespace-nowrap">{row.frekuensiTransaksi}</td>
-              <td className="p-2 whitespace-nowrap">Rp {row.totalDana.toLocaleString()}</td>
+              <td className="numeric p-2 text-right whitespace-nowrap">{row.jumlahPenerima.toLocaleString('id-ID')}</td>
+              <td className="numeric p-2 text-right whitespace-nowrap">{row.frekuensiTransaksi.toLocaleString('id-ID')}</td>
+              <td className="numeric p-2 text-right whitespace-nowrap">Rp {row.totalDana.toLocaleString('id-ID')}</td>
             </tr>
           ))}
         </tbody>

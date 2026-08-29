@@ -31,13 +31,13 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
   const pageNumbers = getPageNumbers();
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-1 p-3 border-t bg-white">
+    <nav aria-label="Navigasi halaman" className="flex flex-wrap items-center justify-center gap-2 border-t bg-white p-3">
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50 hover:bg-gray-300"
+        className="min-h-11 rounded-lg bg-gray-200 px-3 py-2 disabled:opacity-50 hover:bg-gray-300"
       >
-        Prev
+        Sebelumnya
       </button>
       {pageNumbers.map((page, idx) =>
         page === '...' ? (
@@ -48,7 +48,9 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
           <button
             key={page}
             onClick={() => onPageChange(page)}
-            className={`px-3 py-1 rounded ${
+            aria-current={currentPage === page ? 'page' : undefined}
+            aria-label={`Halaman ${page}`}
+            className={`min-h-11 min-w-11 rounded-lg px-3 py-2 ${
               currentPage === page
                 ? 'bg-teal-600 text-white'
                 : 'bg-gray-200 hover:bg-gray-300'
@@ -61,10 +63,10 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50 hover:bg-gray-300"
+        className="min-h-11 rounded-lg bg-gray-200 px-3 py-2 disabled:opacity-50 hover:bg-gray-300"
       >
-        Next
+        Berikutnya
       </button>
-    </div>
+    </nav>
   );
 }

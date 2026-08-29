@@ -1,3 +1,5 @@
+import Dialog from '../../Common/Dialog';
+
 export default function DetailSalurModal({ data, masterData, onClose }) {
   if (!data) return null;
 
@@ -12,16 +14,11 @@ export default function DetailSalurModal({ data, masterData, onClose }) {
     if (value == null) return 'Rp 0';
     const num = Number(value);
     if (isNaN(num)) return 'Rp 0';
-    return `Rp ${num.toLocaleString()}`;
+    return `Rp ${num.toLocaleString('id-ID')}`;
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-lg w-full p-5 max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Detail Transaksi</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
-        </div>
+    <Dialog title="Detail Transaksi" onClose={onClose} maxWidth="max-w-lg">
         <div className="space-y-3">
           <div><label className="block text-sm font-medium text-gray-500">ID PM</label><p className="text-gray-800">{data['ID PM'] || '-'}</p></div>
           {isAlternatif ? (
@@ -41,9 +38,8 @@ export default function DetailSalurModal({ data, masterData, onClose }) {
           <div><label className="block text-sm font-medium text-gray-500">Keterangan</label><p className="text-gray-800">{data['KETERANGAN'] || '-'}</p></div>
         </div>
         <div className="flex justify-end mt-4">
-          <button onClick={onClose} className="px-4 py-2 bg-teal-600 text-white rounded">Tutup</button>
+          <button onClick={onClose} className="min-h-11 px-4 py-2 bg-teal-600 text-white rounded-lg">Tutup</button>
         </div>
-      </div>
-    </div>
+    </Dialog>
   );
 }

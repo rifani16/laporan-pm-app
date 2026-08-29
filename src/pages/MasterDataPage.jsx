@@ -30,6 +30,12 @@ export default function MasterDataPage() {
     setCurrentPage(1);
   };
 
+  const resetFilters = () => {
+    setFilterDaerah('semua');
+    setSearchTerm('');
+    setCurrentPage(1);
+  };
+
   // Hanya tampilkan loading jika belum ada data sama sekali
   if (loading && (!masterData || masterData.length === 0)) {
     return <div className="text-center py-10">Memuat data master...</div>;
@@ -38,13 +44,15 @@ export default function MasterDataPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">Data Penerima Manfaat</h1>
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        <select className="border rounded px-3 py-1 text-sm bg-white flex-1 min-w-[120px]" value={filterDaerah} onChange={handleFilterChange}>
+      <div className="mb-2 flex flex-wrap items-center gap-2">
+        <select aria-label="Filter daerah" className="min-h-11 flex-1 min-w-[140px] rounded-lg border bg-white px-3 py-2 text-sm" value={filterDaerah} onChange={handleFilterChange}>
           {daerahList.map(d => <option key={d} value={d}>{d === 'semua' ? 'Semua Daerah' : d}</option>)}
         </select>
-        <input type="text" placeholder="Cari nama PM..." className="border rounded px-3 py-1 text-sm flex-1 min-w-[150px]" value={searchTerm} onChange={handleSearchChange} />
-        <button onClick={() => setShowModal(true)} className="bg-teal-600 text-white px-4 py-2 rounded text-sm whitespace-nowrap">+ Tambah PM</button>
+        <input aria-label="Cari nama PM" type="search" placeholder="Cari nama PM..." className="min-h-11 flex-1 min-w-[180px] rounded-lg border bg-white px-3 py-2 text-sm" value={searchTerm} onChange={handleSearchChange} />
+        {(filterDaerah !== 'semua' || searchTerm) && <button onClick={resetFilters} className="min-h-11 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50">Reset filter</button>}
+        <button onClick={() => setShowModal(true)} className="min-h-11 whitespace-nowrap rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700">+ Tambah PM</button>
       </div>
+      <p className="mb-4 text-sm text-gray-600" aria-live="polite">Menampilkan {filteredMaster.length} dari {masterData.length} PM</p>
       <MasterTable data={filteredMaster} onUpdate={updateMaster} onDelete={deleteMaster} currentPage={currentPage} onPageChange={setCurrentPage} />
       {showModal && <TambahPmModal onClose={() => setShowModal(false)} />}
     </div>

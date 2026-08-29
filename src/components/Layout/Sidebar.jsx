@@ -17,7 +17,7 @@ export default function Sidebar({ isMobile = false, onClose }) {
       <div className="p-5 font-bold text-xl border-b border-teal-700 flex justify-between items-center">
         <span>PM System</span>
         {isMobile && (
-          <button onClick={onClose} className="md:hidden">
+          <button autoFocus={isMobile} onClick={onClose} aria-label="Tutup menu navigasi" className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg hover:bg-teal-700 md:hidden">
             <X size={24} />
           </button>
         )}
@@ -29,7 +29,7 @@ export default function Sidebar({ isMobile = false, onClose }) {
             to={item.to}
             onClick={isMobile ? onClose : undefined}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-2 rounded-lg transition ${
+              `flex min-h-11 items-center gap-3 rounded-lg px-4 py-2 transition-colors ${
                 isActive ? 'bg-teal-900' : 'hover:bg-teal-700'
               }`
             }

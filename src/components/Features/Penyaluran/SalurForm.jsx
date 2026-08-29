@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, useId } from 'react';
 import { useData } from '@/hooks/useData';
 import { useToast } from '@/hooks/useToast';
 
@@ -18,7 +18,9 @@ export default function SalurForm() {
   const [submitting, setSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
   const wrapperRef = useRef(null);
+  const listboxId = useId();
 
   const pmOptions = useMemo(() => {
     return masterData.map(pm => ({
@@ -32,8 +34,8 @@ export default function SalurForm() {
     if (!searchTerm.trim()) return pmOptions;
     const term = searchTerm.toLowerCase();
     return pmOptions.filter(opt => 
-      opt.id.toLowerCase().includes(term) || 
-      opt.nama.toLowerCase().includes(term)
+      String(opt.id).toLowerCase().includes(term) ||
+      String(opt.nama).toLowerCase().includes(term)
     );
   }, [searchTerm, pmOptions]);
 
@@ -42,10 +44,15 @@ export default function SalurForm() {
     [filteredOptions]
   );
 
+  useEffect(() => {
+    setActiveIndex(index => Math.min(index, Math.max(visibleOptions.length - 1, 0)));
+  }, [visibleOptions.length]);
+
   const handleSelectPm = (pm) => {
     setSelectedPmId(pm.id);
     setSearchTerm(pm.label);
     setShowDropdown(false);
+    setActiveIndex(0);
     setNamaPenerima('');
     setForm({ PROGRAM: '', BENTUK_PENERIMAAN: { uang: false, barang: false }, JUMLAH_PENERIMAAN: '', KETERANGAN: '' });
   };
@@ -53,8 +60,26 @@ export default function SalurForm() {
   const handleInputChange = (e) => {
     setSearchTerm(e.target.value);
     setShowDropdown(true);
-    if (e.target.value === '') {
-      setSelectedPmId('');
+    setActiveIndex(0);
+    setSelectedPmId('');
+    setNamaPenerima('');
+  };
+
+  const handleSearchKeyDown = (event) => {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setShowDropdown(true);
+      if (visibleOptions.length > 0) {
+        setActiveIndex(index => Math.min(index + 1, visibleOptions.length - 1));
+      }
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setActiveIndex(index => Math.max(index - 1, 0));
+    } else if (event.key === 'Enter' && showDropdown && visibleOptions[activeIndex]) {
+      event.preventDefault();
+      handleSelectPm(visibleOptions[activeIndex]);
+    } else if (event.key === 'Escape') {
+      setShowDropdown(false);
     }
   };
 
@@ -135,27 +160,44 @@ export default function SalurForm() {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6 max-w-2xl">
+    <div className="max-w-2xl rounded-xl bg-white p-4 shadow sm:p-6">
       <h2 className="text-xl font-bold mb-4">Form Penyaluran Bantuan</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="relative" ref={wrapperRef}>
-          <label className="block text-sm font-medium">Cari/ Pilih ID PM atau Nama PM</label>
+          <label htmlFor="pm-search" className="block text-sm font-medium">Cari/ Pilih ID PM atau Nama PM</label>
           <input
+            id="pm-search"
             type="text"
-            className="w-full border rounded p-2 bg-white"
+            className="min-h-11 w-full rounded-lg border bg-white p-2"
             value={searchTerm}
             onChange={handleInputChange}
-            onFocus={() => setShowDropdown(true)}
+            onKeyDown={handleSearchKeyDown}
+            onFocus={() => { setShowDropdown(true); setActiveIndex(0); }}
             placeholder="Ketik ID PM atau nama..."
             autoComplete="off"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded={showDropdown}
+            aria-haspopup="listbox"
+            aria-controls={listboxId}
+            aria-activedescendant={showDropdown && visibleOptions[activeIndex] ? `${listboxId}-option-${activeIndex}` : undefined}
           />
-          {showDropdown && filteredOptions.length > 0 && (
-            <ul className="absolute z-10 w-full bg-white border rounded shadow-md max-h-60 overflow-y-auto">
-              {visibleOptions.map(opt => (
-                <li key={opt.id} onClick={() => handleSelectPm(opt)} className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm">
+          {showDropdown && (
+            <ul id={listboxId} role="listbox" className="absolute z-10 max-h-60 w-full overflow-y-auto rounded-lg border bg-white shadow-md">
+              {visibleOptions.map((opt, index) => (
+                <li
+                  id={`${listboxId}-option-${index}`}
+                  role="option"
+                  aria-selected={activeIndex === index}
+                  key={opt.id}
+                  onMouseEnter={() => setActiveIndex(index)}
+                  onMouseDown={event => { event.preventDefault(); handleSelectPm(opt); }}
+                  className={`cursor-pointer px-3 py-3 text-sm ${activeIndex === index ? 'bg-teal-50 text-teal-900' : 'hover:bg-gray-100'}`}
+                >
                   {opt.label}
                 </li>
               ))}
+              {visibleOptions.length === 0 && <li className="px-3 py-3 text-sm text-gray-500">PM tidak ditemukan.</li>}
               {filteredOptions.length > MAX_VISIBLE_PM_OPTIONS && (
                 <li className="px-3 py-2 text-xs text-gray-500 bg-gray-50">
                   Ketik ID atau nama untuk mempersempit {filteredOptions.length} hasil.
@@ -167,9 +209,10 @@ export default function SalurForm() {
 
         {selectedPm && (
           <div>
-            <label className="block text-sm font-medium">Pilih Nama Penerima</label>
+            <label htmlFor="nama-penerima" className="block text-sm font-medium">Pilih Nama Penerima</label>
             <select
-              className="w-full border rounded p-2 bg-white"
+              id="nama-penerima"
+              className="min-h-11 w-full rounded-lg border bg-white p-2"
               value={namaPenerima}
               onChange={e => setNamaPenerima(e.target.value)}
               required
@@ -181,9 +224,10 @@ export default function SalurForm() {
         )}
 
         <div>
-          <label className="block text-sm font-medium">Program</label>
+          <label htmlFor="program-salur" className="block text-sm font-medium">Program</label>
           <select
-            className="w-full border rounded p-2 bg-white"
+            id="program-salur"
+            className="min-h-11 w-full rounded-lg border bg-white p-2"
             value={form.PROGRAM}
             onChange={e => setForm({ ...form, PROGRAM: e.target.value })}
             required
@@ -196,11 +240,11 @@ export default function SalurForm() {
         <div>
           <label className="block text-sm font-medium">Bentuk Penerimaan</label>
           <div className="flex gap-4 mt-1">
-            <label className="flex items-center gap-2">
+            <label className="flex min-h-11 items-center gap-2">
               <input type="checkbox" checked={form.BENTUK_PENERIMAAN.uang} onChange={() => handleCheckboxChange('uang')} />
               Uang
             </label>
-            <label className="flex items-center gap-2">
+            <label className="flex min-h-11 items-center gap-2">
               <input type="checkbox" checked={form.BENTUK_PENERIMAAN.barang} onChange={() => handleCheckboxChange('barang')} />
               Barang
             </label>
@@ -208,10 +252,11 @@ export default function SalurForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium">Jumlah Penerimaan (Rp)</label>
+          <label htmlFor="jumlah-penerimaan" className="block text-sm font-medium">Jumlah Penerimaan (Rp)</label>
           <input
+            id="jumlah-penerimaan"
             type="number"
-            className="w-full border rounded p-2 bg-white"
+            className="min-h-11 w-full rounded-lg border bg-white p-2 numeric"
             value={form.JUMLAH_PENERIMAAN}
             onChange={e => setForm({ ...form, JUMLAH_PENERIMAAN: e.target.value })}
             placeholder="Nominal dalam Rupiah"
@@ -220,9 +265,10 @@ export default function SalurForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium">Keterangan</label>
+          <label htmlFor="keterangan-salur" className="block text-sm font-medium">Keterangan</label>
           <textarea
-            className="w-full border rounded p-2 bg-white"
+            id="keterangan-salur"
+            className="w-full rounded-lg border bg-white p-2"
             value={form.KETERANGAN}
             onChange={e => setForm({ ...form, KETERANGAN: e.target.value })}
             rows={2}
@@ -230,7 +276,7 @@ export default function SalurForm() {
           />
         </div>
 
-        <button type="submit" disabled={submitting} className="bg-teal-600 text-white px-4 py-2 rounded w-full hover:bg-teal-700">
+        <button type="submit" disabled={submitting} className="min-h-11 w-full rounded-lg bg-teal-600 px-4 py-2 font-medium text-white hover:bg-teal-700 disabled:opacity-50">
           {submitting ? 'Menyimpan...' : 'Simpan Penyaluran'}
         </button>
       </form>

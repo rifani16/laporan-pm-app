@@ -15,7 +15,7 @@ const EMPTY_LIST = [];
 const EMPTY_REF_DATA = { asnaf: EMPTY_LIST, program: EMPTY_LIST, daerah: EMPTY_LIST };
 
 export const DataProvider = ({ children }) => {
-  const { data, loading, invalidateCache } = useCache('app-data', fetchAllData);
+  const { data, loading, error, invalidateCache } = useCache('app-data', fetchAllData);
 
   const refreshData = useCallback(() => invalidateCache(), [invalidateCache]);
 
@@ -64,6 +64,7 @@ export const DataProvider = ({ children }) => {
     salurData,
     refData,
     loading,
+    error,
     refreshData,
     updateMaster,
     createSalur,
@@ -71,7 +72,7 @@ export const DataProvider = ({ children }) => {
     updateSalur,
     deleteMaster,
     deleteSalur
-  }), [masterData, salurData, refData, loading, refreshData, updateMaster, createSalur, createMaster, updateSalur, deleteMaster, deleteSalur]);
+  }), [masterData, salurData, refData, loading, error, refreshData, updateMaster, createSalur, createMaster, updateSalur, deleteMaster, deleteSalur]);
 
   return (
     <DataContext.Provider value={contextValue}>
