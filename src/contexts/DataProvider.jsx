@@ -6,6 +6,9 @@ import {
   addSalur,
   addMaster,
   editSalur,
+  addProgram as requestAddProgram,
+  editProgram as requestEditProgram,
+  deleteProgram as requestDeleteProgram,
   deleteMaster as requestDeleteMaster,
   deleteSalur as requestDeleteSalur
 } from '../services/api';
@@ -55,6 +58,24 @@ export const DataProvider = ({ children }) => {
     return result;
   }, [refreshData]);
 
+  const createProgram = useCallback(async (name) => {
+    const result = await requestAddProgram(name);
+    if (result.success) await refreshData();
+    return result;
+  }, [refreshData]);
+
+  const updateProgram = useCallback(async (oldName, newName) => {
+    const result = await requestEditProgram(oldName, newName);
+    if (result.success) await refreshData();
+    return result;
+  }, [refreshData]);
+
+  const deleteProgram = useCallback(async (name) => {
+    const result = await requestDeleteProgram(name);
+    if (result.success) await refreshData();
+    return result;
+  }, [refreshData]);
+
   const masterData = data?.master || EMPTY_LIST;
   const salurData = data?.salur || EMPTY_LIST;
   const refData = data?.ref || EMPTY_REF_DATA;
@@ -71,8 +92,11 @@ export const DataProvider = ({ children }) => {
     createMaster,
     updateSalur,
     deleteMaster,
-    deleteSalur
-  }), [masterData, salurData, refData, loading, error, refreshData, updateMaster, createSalur, createMaster, updateSalur, deleteMaster, deleteSalur]);
+    deleteSalur,
+    createProgram,
+    updateProgram,
+    deleteProgram
+  }), [masterData, salurData, refData, loading, error, refreshData, updateMaster, createSalur, createMaster, updateSalur, deleteMaster, deleteSalur, createProgram, updateProgram, deleteProgram]);
 
   return (
     <DataContext.Provider value={contextValue}>

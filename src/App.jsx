@@ -8,6 +8,7 @@ import DashboardPage from './pages/DashboardPage';
 import MasterDataPage from './pages/MasterDataPage';
 import PenyaluranPage from './pages/PenyaluranPage';
 import ProgramPenerimaPage from './pages/ProgramPenerimaPage';
+import ProgramManagementPage from './pages/ProgramManagementPage';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -60,6 +61,7 @@ function App() {
                     <Route path="/master" element={<MasterDataPage />} />
                     <Route path="/salur" element={<PenyaluranPage />} />
                     <Route path="/program-penerima" element={<ProgramPenerimaPage />} />
+                    <Route path="/program" element={<ProgramManagementPage />} />
                   </Routes>
                 </div>
               </main>

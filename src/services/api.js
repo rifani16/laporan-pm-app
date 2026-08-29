@@ -64,3 +64,30 @@ export const deleteSalur = async (idSalur) => {
   });
   return await res.json();
 };
+
+export const addProgram = async (name) => {
+  const res = await fetch(`${API_BASE}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "TAMBAH_PROGRAM", data: { name } }),
+  });
+  return await res.json();
+};
+
+export const editProgram = async (oldName, newName) => {
+  const res = await fetch(`${API_BASE}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "EDIT_PROGRAM", data: { oldName, newName } }),
+  });
+  return await res.json();
+};
+
+export const deleteProgram = async (name) => {
+  const res = await fetch(`${API_BASE}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "HAPUS_PROGRAM", data: { name } }),
+  });
+  return await res.json();
+};

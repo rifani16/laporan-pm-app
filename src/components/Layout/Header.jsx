@@ -7,7 +7,8 @@ const PAGE_TITLES = {
   '/': 'Dashboard',
   '/master': 'Daftar Penerima Manfaat',
   '/salur': 'Input Penyaluran',
-  '/program-penerima': 'Penerima per Program'
+  '/program-penerima': 'Penerima per Program',
+  '/program': 'Manajemen Program'
 };
 
 export default function Header({ toggleSidebar }) {

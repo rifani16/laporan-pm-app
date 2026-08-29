@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, PlusCircle, ListFilter } from 'lucide-react';
+import { LayoutDashboard, Users, PlusCircle, ListFilter, Settings } from 'lucide-react';
 import { X } from 'lucide-react';
 
 const isAuthFeatureEnabled = false;
@@ -9,7 +9,8 @@ export default function Sidebar({ isMobile = false, onClose }) {
     { to: '/', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/master', label: 'Daftar PM', icon: Users },
     { to: '/salur', label: 'Input Penyaluran', icon: PlusCircle },
-    { to: '/program-penerima', label: 'Penerima per Program', icon: ListFilter }
+    { to: '/program-penerima', label: 'Penerima per Program', icon: ListFilter },
+    { to: '/program', label: 'Manajemen Program', icon: Settings }
   ];
 
   return (
