@@ -45,6 +45,7 @@ export default function MasterTable({ data, onUpdate, onDelete, currentPage, onP
               <th className="p-2 text-left">No</th>
               <th className="p-2 text-left">Nama PM</th>
               <th className="p-2 text-left">Daerah</th>
+              <th className="min-w-48 p-2 text-left">Program Diterima</th>
               <th className="p-2 text-right">Total Penerimaan</th>
               <th className="w-40 min-w-40 p-2 text-center">Aksi</th>
             </tr>
@@ -55,6 +56,7 @@ export default function MasterTable({ data, onUpdate, onDelete, currentPage, onP
                 <td className="p-2">{startIndex + idx + 1}</td>
                 <td className="p-2 font-medium">{pm['NAMA PM']}</td>
                 <td className="p-2">{pm['DAERAH'] || '-'}</td>
+                <td className="min-w-48 max-w-xs whitespace-normal p-2 text-gray-700">{pm['PENERIMAAN PROGRAM'] || '-'}</td>
                 <td className="p-2 text-right numeric">Rp {Number(pm['TOTAL PENERIMAAN'] || 0).toLocaleString('id-ID')}</td>
                 <td className="w-40 min-w-40 p-2 text-right">
                   <div className="flex flex-wrap justify-end gap-1">
