@@ -2,6 +2,8 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { useData } from '@/hooks/useData';
 import { useToast } from '@/hooks/useToast';
 
+const MAX_VISIBLE_PM_OPTIONS = 50;
+
 export default function SalurForm() {
   const { masterData, refData, createSalur } = useData();
   const { showToast } = useToast();
@@ -34,6 +36,11 @@ export default function SalurForm() {
       opt.nama.toLowerCase().includes(term)
     );
   }, [searchTerm, pmOptions]);
+
+  const visibleOptions = useMemo(
+    () => filteredOptions.slice(0, MAX_VISIBLE_PM_OPTIONS),
+    [filteredOptions]
+  );
 
   const handleSelectPm = (pm) => {
     setSelectedPmId(pm.id);
@@ -144,11 +151,16 @@ export default function SalurForm() {
           />
           {showDropdown && filteredOptions.length > 0 && (
             <ul className="absolute z-10 w-full bg-white border rounded shadow-md max-h-60 overflow-y-auto">
-              {filteredOptions.map(opt => (
+              {visibleOptions.map(opt => (
                 <li key={opt.id} onClick={() => handleSelectPm(opt)} className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm">
                   {opt.label}
                 </li>
               ))}
+              {filteredOptions.length > MAX_VISIBLE_PM_OPTIONS && (
+                <li className="px-3 py-2 text-xs text-gray-500 bg-gray-50">
+                  Ketik ID atau nama untuk mempersempit {filteredOptions.length} hasil.
+                </li>
+              )}
             </ul>
           )}
         </div>

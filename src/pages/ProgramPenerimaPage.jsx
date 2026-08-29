@@ -14,9 +14,14 @@ export default function ProgramPenerimaPage() {
   const [editItem, setEditItem] = useState(null);
   const rowsPerPage = 10;
 
+  const masterById = useMemo(
+    () => new Map(masterData.map(master => [master['ID PM'], master])),
+    [masterData]
+  );
+
   const enrichedSalur = useMemo(() => {
     return salurData.map(s => {
-      const master = masterData.find(m => m['ID PM'] === s['ID PM']);
+      const master = masterById.get(s['ID PM']);
       return {
         ...s,
         NAMA_PM_UTAMA: master ? master['NAMA PM'] : '',
@@ -24,13 +29,14 @@ export default function ProgramPenerimaPage() {
         ALAMAT: s['ALAMAT'] || (master ? master['ALAMAT'] : '')
       };
     });
-  }, [salurData, masterData]);
+  }, [salurData, masterById]);
 
   const filteredData = useMemo(() => {
+    const normalizedSearch = searchNama.trim().toLowerCase();
     return enrichedSalur.filter(item => {
       const matchProgram = filterProgram === 'semua' || item['PROGRAM'] === filterProgram;
       const matchDaerah = filterDaerah === 'semua' || item['DAERAH'] === filterDaerah;
-      const matchNama = !searchNama.trim() || item.NAMA_PM_UTAMA.toLowerCase().includes(searchNama.toLowerCase());
+      const matchNama = !normalizedSearch || item.NAMA_PM_UTAMA.toLowerCase().includes(normalizedSearch);
       return matchProgram && matchDaerah && matchNama;
     });
   }, [enrichedSalur, filterProgram, filterDaerah, searchNama]);

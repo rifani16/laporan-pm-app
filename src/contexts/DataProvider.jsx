@@ -1,57 +1,45 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useMemo } from 'react';
 import { DataContext } from './DataContext';
-import { fetchAllData, editMaster, addSalur, addMaster } from '../services/api';
+import { fetchAllData, editMaster, addSalur, addMaster, editSalur } from '../services/api';
 import useCache from '../hooks/useCache';
-import { editSalur } from '../services/api';
+
+const EMPTY_LIST = [];
+const EMPTY_REF_DATA = { asnaf: EMPTY_LIST, program: EMPTY_LIST, daerah: EMPTY_LIST };
 
 export const DataProvider = ({ children }) => {
-  const { data, invalidateCache } = useCache('app-data', fetchAllData);
-  const [loading, setLoading] = useState(true);
+  const { data, loading, invalidateCache } = useCache('app-data', fetchAllData);
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      await data;
-      setLoading(false);
-    };
-    load();
-  }, [data]);
+  const refreshData = useCallback(() => invalidateCache(), [invalidateCache]);
 
-  const refreshData = async () => {
-    setLoading(true);
-    await invalidateCache(); // ini akan memanggil loadData(true) di useCache
-    setLoading(false);
-  };
-
-  const updateMaster = async (idPm, updatedFields) => {
+  const updateMaster = useCallback(async (idPm, updatedFields) => {
     const result = await editMaster(idPm, updatedFields);
     if (result.success) await refreshData();
     return result;
-  };
+  }, [refreshData]);
 
-  const createSalur = async (payload) => {
+  const createSalur = useCallback(async (payload) => {
     const result = await addSalur(payload);
     if (result.success) await refreshData();
     return result;
-  };
+  }, [refreshData]);
 
-  const createMaster = async (payload) => {
+  const createMaster = useCallback(async (payload) => {
     const result = await addMaster(payload);
     if (result.success) await refreshData();
     return result;
-  };
+  }, [refreshData]);
 
-  const updateSalur = async (payload) => {
+  const updateSalur = useCallback(async (payload) => {
     const result = await editSalur(payload);
     if (result.success) await refreshData();
     return result;
-  };
+  }, [refreshData]);
 
-  const masterData = data?.master || [];
-  const salurData = data?.salur || [];
-  const refData = data?.ref || { asnaf: [], program: [], daerah: [] };
+  const masterData = data?.master || EMPTY_LIST;
+  const salurData = data?.salur || EMPTY_LIST;
+  const refData = data?.ref || EMPTY_REF_DATA;
 
-  const contextValue = {
+  const contextValue = useMemo(() => ({
     masterData,
     salurData,
     refData,
@@ -61,7 +49,7 @@ export const DataProvider = ({ children }) => {
     createSalur,
     createMaster,
     updateSalur
-  };
+  }), [masterData, salurData, refData, loading, refreshData, updateMaster, createSalur, createMaster, updateSalur]);
 
   return (
     <DataContext.Provider value={contextValue}>

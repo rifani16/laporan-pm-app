@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useData } from '@/hooks/useData';
 import { useToast } from '@/hooks/useToast';
 
-export default function TambahPmModal({ onClose, onSuccess }) {
+export default function TambahPmModal({ onClose }) {
   const { refData, createMaster } = useData();
   const { showToast } = useToast();
   const [form, setForm] = useState({
@@ -35,7 +35,6 @@ export default function TambahPmModal({ onClose, onSuccess }) {
       const result = await createMaster(form);
       if (result.success) {
         showToast('Data PM berhasil ditambahkan', 'success');
-        onSuccess();
         onClose();
       } else {
         showToast('Gagal: ' + (result.error || 'Unknown error'), 'error');
