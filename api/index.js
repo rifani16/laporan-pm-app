@@ -25,10 +25,10 @@ export default async function handler(req, res) {
   // 3. (Opsional) Rate limiting sederhana - butuh storage eksternal di Vercel
   //    (tidak bisa diandalkan tanpa database, tapi bisa gunakan Vercel KV atau Upstash)
 
-  // 4. Validasi path (opsional)
-  const gasUrl = process.env.VITE_GAS_URL;
+  // 4. Validasi path — GAS_URL server-only (tidak pakai VITE_ agar tidak bocor ke client)
+  const gasUrl = process.env.GAS_URL;
   if (!gasUrl) {
-    return res.status(500).json({ error: 'VITE_GAS_URL tidak diset' });
+    return res.status(500).json({ error: 'Server misconfigured' });
   }
   let target = gasUrl;
   const pathPart = req.url.replace(/^\/api/, '');

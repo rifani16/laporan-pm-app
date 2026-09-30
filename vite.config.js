@@ -5,7 +5,8 @@ import path from 'path';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  const gasUrl = env.VITE_GAS_URL;
+  // P1-01: GAS_URL server-only (tanpa VITE_ agar tidak bocor ke bundle client)
+  const gasUrl = env.GAS_URL;
 
   const config = {
     base: '/',

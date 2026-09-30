@@ -44,9 +44,7 @@ export default function SalurForm() {
     [filteredOptions]
   );
 
-  useEffect(() => {
-    setActiveIndex(index => Math.min(index, Math.max(visibleOptions.length - 1, 0)));
-  }, [visibleOptions.length]);
+  const clampedActiveIndex = visibleOptions.length === 0 ? 0 : Math.min(activeIndex, visibleOptions.length - 1);
 
   const handleSelectPm = (pm) => {
     setSelectedPmId(pm.id);
@@ -75,9 +73,9 @@ export default function SalurForm() {
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
       setActiveIndex(index => Math.max(index - 1, 0));
-    } else if (event.key === 'Enter' && showDropdown && visibleOptions[activeIndex]) {
+    } else if (event.key === 'Enter' && showDropdown && visibleOptions[clampedActiveIndex]) {
       event.preventDefault();
-      handleSelectPm(visibleOptions[activeIndex]);
+      handleSelectPm(visibleOptions[clampedActiveIndex]);
     } else if (event.key === 'Escape') {
       setShowDropdown(false);
     }

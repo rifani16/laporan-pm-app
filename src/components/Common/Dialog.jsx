@@ -20,8 +20,11 @@ export default function Dialog({
   const dialogRef = useRef(null);
   const onCloseRef = useRef(onClose);
   const closeDisabledRef = useRef(closeDisabled);
-  onCloseRef.current = onClose;
-  closeDisabledRef.current = closeDisabled;
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+    closeDisabledRef.current = closeDisabled;
+  }, [onClose, closeDisabled]);
 
   useEffect(() => {
     const previouslyFocused = document.activeElement;

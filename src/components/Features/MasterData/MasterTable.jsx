@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import EditModal from './EditModal';
 import DetailPmModal from './DetailPmModal';
 import Pagination from '../../Common/Pagination';
 import ConfirmDialog from '../../Common/ConfirmDialog';
+import SortIcon from '../../Common/SortIcon';
 import { useToast } from '../../../hooks/useToast';
 
 export default function MasterTable({ data, onUpdate, onDelete, currentPage, onPageChange, rowsPerPage = 10, onRowsPerPageChange }) {
@@ -11,9 +12,51 @@ export default function MasterTable({ data, onUpdate, onDelete, currentPage, onP
   const [detailItem, setDetailItem] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
-  const totalPages = Math.ceil(data.length / rowsPerPage);
+
+  // awal buka tidak disorting; sorting aktif setelah user klik header
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+  const handleSort = (key) => {
+    setSortConfig(prev => {
+      if (prev.key === key) {
+        return { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
+      }
+      // numeric desc default, text asc default
+      const direction = key === 'TOTAL PENERIMAAN' ? 'desc' : 'asc';
+      return { key, direction };
+    });
+    onPageChange(1);
+  };
+
+  const sortedData = useMemo(() => {
+    if (!sortConfig.key) return data;
+
+    return [...data].sort((a, b) => {
+      const aValue = a[sortConfig.key];
+      const bValue = b[sortConfig.key];
+
+      if (aValue === bValue) return 0;
+
+      if (sortConfig.key === 'TOTAL PENERIMAAN') {
+        return sortConfig.direction === 'asc'
+          ? (Number(aValue) || 0) - (Number(bValue) || 0)
+          : (Number(bValue) || 0) - (Number(aValue) || 0);
+      }
+
+      const aStr = String(aValue || '').toLowerCase();
+      const bStr = String(bValue || '').toLowerCase();
+
+      if (aStr < bStr) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aStr > bStr) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [data, sortConfig]);
+
+
+
+  const totalPages = Math.ceil(sortedData.length / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
-  const paginated = data.slice(startIndex, startIndex + rowsPerPage);
+  const paginated = sortedData.slice(startIndex, startIndex + rowsPerPage);
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -43,10 +86,18 @@ export default function MasterTable({ data, onUpdate, onDelete, currentPage, onP
           <thead className="bg-gray-100">
             <tr>
               <th className="p-2 text-left">No</th>
-              <th className="p-2 text-left">Nama PM</th>
+              <th className="p-2 text-left">
+                <button type="button" onClick={() => handleSort('NAMA PM')} className="inline-flex items-center gap-1 hover:text-teal-700" aria-label="Urutkan berdasarkan Nama PM">
+                  Nama PM <SortIcon active={sortConfig.key === 'NAMA PM'} direction={sortConfig.direction} />
+                </button>
+              </th>
               <th className="p-2 text-left">Daerah</th>
               <th className="min-w-48 p-2 text-left">Program Diterima</th>
-              <th className="p-2 text-right">Total Penerimaan</th>
+              <th className="p-2 text-right">
+                <button type="button" onClick={() => handleSort('TOTAL PENERIMAAN')} className="inline-flex items-center gap-1 hover:text-teal-700" aria-label="Urutkan berdasarkan Total Penerimaan">
+                  Total Penerimaan <SortIcon active={sortConfig.key === 'TOTAL PENERIMAAN'} direction={sortConfig.direction} />
+                </button>
+              </th>
               <th className="w-40 min-w-40 p-2 text-center">Aksi</th>
             </tr>
           </thead>
