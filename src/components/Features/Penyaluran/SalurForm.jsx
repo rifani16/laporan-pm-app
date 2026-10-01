@@ -1,11 +1,13 @@
 import { useState, useMemo, useRef, useEffect, useId } from 'react';
 import { useData } from '@/hooks/useData';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 
 const MAX_VISIBLE_PM_OPTIONS = 50;
 
 export default function SalurForm() {
   const { masterData, refData, createSalur } = useData();
+  const { isSuperAdmin, userDaerah } = useAuth();
   const { showToast } = useToast();
   const [selectedPmId, setSelectedPmId] = useState('');
   const [namaPenerima, setNamaPenerima] = useState('');
@@ -22,20 +24,28 @@ export default function SalurForm() {
   const wrapperRef = useRef(null);
   const listboxId = useId();
 
+  const scopedMasterData = useMemo(() => {
+    if (!isSuperAdmin && userDaerah) {
+      return masterData.filter(pm => pm['DAERAH'] === userDaerah);
+    }
+    return masterData;
+  }, [masterData, isSuperAdmin, userDaerah]);
+
   const pmOptions = useMemo(() => {
-    return masterData.map(pm => ({
+    return scopedMasterData.map(pm => ({
       id: pm['ID PM'],
-      label: `${pm['ID PM']} - ${pm['NAMA PM']}`,
+      label: `${pm['ID PM']} - ${pm['NAMA PM']}${isSuperAdmin && pm['DAERAH'] ? ` (${pm['DAERAH']})` : ''}`,
       nama: pm['NAMA PM']
     }));
-  }, [masterData]);
+  }, [scopedMasterData, isSuperAdmin]);
 
   const filteredOptions = useMemo(() => {
     if (!searchTerm.trim()) return pmOptions;
     const term = searchTerm.toLowerCase();
     return pmOptions.filter(opt => 
       String(opt.id).toLowerCase().includes(term) ||
-      String(opt.nama).toLowerCase().includes(term)
+      String(opt.nama).toLowerCase().includes(term) ||
+      String(opt.label).toLowerCase().includes(term)
     );
   }, [searchTerm, pmOptions]);
 
@@ -91,7 +101,7 @@ export default function SalurForm() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const selectedPm = masterData.find(p => p['ID PM'] === selectedPmId);
+  const selectedPm = scopedMasterData.find(p => p['ID PM'] === selectedPmId);
   const namaOptions = selectedPm
     ? [
         { label: selectedPm['NAMA PM'], nik: selectedPm['NIK'] },
@@ -130,7 +140,7 @@ export default function SalurForm() {
       'ID PM': selectedPmId,
       'NAMA PENERIMA': namaPenerima,
       'NIK PENERIMA': selected.nik,
-      'DAERAH': selectedPm['DAERAH'] || '',
+      'DAERAH': selectedPm['DAERAH'] || (!isSuperAdmin ? userDaerah : ''),
       'ALAMAT': selectedPm['ALAMAT'] || '',
       'PROGRAM': form.PROGRAM,
       'BENTUK PENERIMAAN': bentukPenerimaan,
@@ -159,10 +169,18 @@ export default function SalurForm() {
 
   return (
     <div className="max-w-2xl rounded-xl bg-white p-4 shadow sm:p-6">
-      <h2 className="text-xl font-bold mb-4">Form Penyaluran Bantuan</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold">Form Penyaluran Bantuan</h2>
+        {!isSuperAdmin && userDaerah && (
+          <span className="text-xs bg-teal-50 text-teal-700 border border-teal-200 px-2 py-0.5 rounded font-medium">
+            {userDaerah}
+          </span>
+        )}
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="relative" ref={wrapperRef}>
-          <label htmlFor="pm-search" className="block text-sm font-medium">Cari/ Pilih ID PM atau Nama PM</label>
+          <label htmlFor="pm-search" className="block text-sm font-medium">Cari / Pilih ID PM atau Nama PM</label>
           <input
             id="pm-search"
             type="text"

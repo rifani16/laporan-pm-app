@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useData } from '@/hooks/useData';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 import Dialog from '@/components/Common/Dialog';
 
 export default function EditModal({ item, onClose, onSave }) {
   const { refData } = useData();
+  const { isSuperAdmin } = useAuth();
   const { showToast } = useToast();
   const [form, setForm] = useState({
     'NAMA PM': item['NAMA PM'],
@@ -46,12 +48,10 @@ export default function EditModal({ item, onClose, onSave }) {
 
   return (
     <Dialog title="Edit Data PM" onClose={onClose} closeDisabled={submitting} maxWidth="max-w-lg">
-        <div className="space-y-3">
-          {/* Sama seperti Tambah, tapi tanpa ID PM dan tidak perlu checkbox dll */}
-          {/* Render semua field termasuk CATATAN */}
-          {Object.keys(form).map(k => {
-            const fieldId = `edit-pm-${k.toLowerCase().replace(/\s+/g, '-')}`;
-            return (
+      <div className="space-y-3">
+        {Object.keys(form).map(k => {
+          const fieldId = `edit-pm-${k.toLowerCase().replace(/\s+/g, '-')}`;
+          return (
             <div key={k}>
               <label htmlFor={fieldId} className="block text-sm font-medium">{k}</label>
               {k === 'ASNAF' ? (
@@ -60,7 +60,13 @@ export default function EditModal({ item, onClose, onSave }) {
                   {refData.asnaf.map(a => <option key={a}>{a}</option>)}
                 </select>
               ) : k === 'DAERAH' ? (
-                <select id={fieldId} className="min-h-11 w-full rounded-lg border p-2" value={form[k]} onChange={e => setForm({ ...form, [k]: e.target.value })}>
+                <select
+                  id={fieldId}
+                  className="min-h-11 w-full rounded-lg border p-2 disabled:bg-gray-100 disabled:text-gray-600"
+                  value={form[k]}
+                  onChange={e => setForm({ ...form, [k]: e.target.value })}
+                  disabled={!isSuperAdmin}
+                >
                   <option value="">-- Pilih Daerah --</option>
                   {refData.daerah.map(d => <option key={d}>{d}</option>)}
                 </select>
@@ -72,15 +78,15 @@ export default function EditModal({ item, onClose, onSave }) {
                 <input id={fieldId} className="min-h-11 w-full rounded-lg border p-2" value={form[k] || ''} onChange={e => setForm({ ...form, [k]: e.target.value })} />
               )}
             </div>
-            );
-          })}
-        </div>
-        <div className="flex justify-end gap-2 mt-4">
-          <button onClick={onClose} disabled={submitting} className="min-h-11 px-4 py-2 border rounded-lg">Batal</button>
-          <button onClick={handleSave} disabled={submitting} className={`min-h-11 px-4 py-2 rounded-lg text-white ${submitting ? 'bg-gray-400' : 'bg-teal-600'}`}>
-            {submitting ? 'Menyimpan...' : 'Simpan'}
-          </button>
-        </div>
+          );
+        })}
+      </div>
+      <div className="flex justify-end gap-2 mt-4">
+        <button onClick={onClose} disabled={submitting} className="min-h-11 px-4 py-2 border rounded-lg">Batal</button>
+        <button onClick={handleSave} disabled={submitting} className={`min-h-11 px-4 py-2 rounded-lg text-white ${submitting ? 'bg-gray-400' : 'bg-teal-600'}`}>
+          {submitting ? 'Menyimpan...' : 'Simpan'}
+        </button>
+      </div>
     </Dialog>
   );
 }

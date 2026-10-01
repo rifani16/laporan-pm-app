@@ -91,3 +91,31 @@ export const deleteProgram = async (name) => {
   });
   return await res.json();
 };
+
+export const loginUser = async (username, password) => {
+  const res = await fetch(`${API_BASE}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "LOGIN",
+      data: { username, password }
+    }),
+  });
+  const json = await res.json();
+  if (!json.success) {
+    throw new Error(json.error || json.message || "Login gagal");
+  }
+  return json.user || (json.data && json.data.user);
+};
+
+export const changePassword = async (username, oldPassword, newPassword) => {
+  const res = await fetch(`${API_BASE}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "CHANGE_PASSWORD",
+      data: { username, oldPassword, newPassword }
+    }),
+  });
+  return await res.json();
+};

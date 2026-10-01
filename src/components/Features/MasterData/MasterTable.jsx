@@ -5,8 +5,10 @@ import Pagination from '../../Common/Pagination';
 import ConfirmDialog from '../../Common/ConfirmDialog';
 import SortIcon from '../../Common/SortIcon';
 import { useToast } from '../../../hooks/useToast';
+import { useAuth } from '../../../hooks/useAuth';
 
 export default function MasterTable({ data, onUpdate, onDelete, currentPage, onPageChange, rowsPerPage = 10, onRowsPerPageChange }) {
+  const { isSuperAdmin } = useAuth();
   const { showToast } = useToast();
   const [editItem, setEditItem] = useState(null);
   const [detailItem, setDetailItem] = useState(null);
@@ -98,7 +100,7 @@ export default function MasterTable({ data, onUpdate, onDelete, currentPage, onP
                   Total Penerimaan <SortIcon active={sortConfig.key === 'TOTAL PENERIMAAN'} direction={sortConfig.direction} />
                 </button>
               </th>
-              <th className="w-40 min-w-40 p-2 text-center">Aksi</th>
+              <th className={`p-2 text-center ${isSuperAdmin ? 'w-40 min-w-40' : 'w-28 min-w-28'}`}>Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -109,17 +111,19 @@ export default function MasterTable({ data, onUpdate, onDelete, currentPage, onP
                 <td className="p-2">{pm['DAERAH'] || '-'}</td>
                 <td className="min-w-48 max-w-xs whitespace-normal p-2 text-gray-700">{pm['PENERIMAAN PROGRAM'] || '-'}</td>
                 <td className="p-2 text-right numeric">Rp {Number(pm['TOTAL PENERIMAAN'] || 0).toLocaleString('id-ID')}</td>
-                <td className="w-40 min-w-40 p-2 text-right">
+                <td className={`p-2 text-right ${isSuperAdmin ? 'w-40 min-w-40' : 'w-28 min-w-28'}`}>
                   <div className="flex flex-wrap justify-end gap-1">
                     <button onClick={() => setDetailItem(pm)} className="rounded-md bg-blue-600 px-2 py-1.5 text-xs font-medium text-white hover:bg-blue-700">Detail</button>
                     <button onClick={() => setEditItem(pm)} className="rounded-md bg-teal-600 px-2 py-1.5 text-xs font-medium text-white hover:bg-teal-700">Edit</button>
-                    <button
-                      onClick={() => setDeleteTarget(pm)}
-                      disabled={deletingId === pm['ID PM']}
-                      className="rounded-md bg-red-600 px-2 py-1.5 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
-                    >
-                      {deletingId === pm['ID PM'] ? 'Menghapus...' : 'Hapus'}
-                    </button>
+                    {isSuperAdmin && (
+                      <button
+                        onClick={() => setDeleteTarget(pm)}
+                        disabled={deletingId === pm['ID PM']}
+                        className="rounded-md bg-red-600 px-2 py-1.5 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                      >
+                        {deletingId === pm['ID PM'] ? 'Menghapus...' : 'Hapus'}
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
