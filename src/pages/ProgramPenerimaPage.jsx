@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useData } from '../hooks/useData';
 import { useAuth } from '../hooks/useAuth';
 import Pagination from '../components/Common/Pagination';
@@ -83,6 +84,8 @@ export default function ProgramPenerimaPage() {
     }
   };
 
+  const hasActiveFilter = filterProgram !== 'semua' || (isSuperAdmin && activeFilterDaerah !== 'semua') || Boolean(searchNama);
+
   const resetFilters = () => {
     setFilterProgram('semua');
     setFilterDaerah('semua');
@@ -149,7 +152,7 @@ export default function ProgramPenerimaPage() {
             onChange={e => { setSearchNama(e.target.value); setCurrentPage(1); }}
           />
         </div>
-        {((filterProgram !== 'semua' || (isSuperAdmin && activeFilterDaerah !== 'semua') || searchNama || displayMode !== 'penerima')) && (
+        {(hasActiveFilter || displayMode !== 'penerima') && (
           <button onClick={resetFilters} className="min-h-11 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Reset filter</button>
         )}
         <p className="w-full text-sm text-gray-600" aria-live="polite">
@@ -215,7 +218,21 @@ export default function ProgramPenerimaPage() {
               })}
             </tbody>
           </table>
-          {filteredData.length === 0 && <div className="p-4 text-center text-gray-500">Tidak ada data untuk filter ini.</div>}
+          {filteredData.length === 0 && (
+            <div className="p-4 text-center text-gray-600">
+              {hasActiveFilter ? (
+                <>
+                  Tidak ada penyaluran yang cocok dengan filter.{' '}
+                  <button onClick={resetFilters} className="font-medium text-teal-700 underline hover:text-teal-800">Reset filter</button>
+                </>
+              ) : (
+                <>
+                  Belum ada penyaluran tercatat.{' '}
+                  <Link to="/salur" className="font-medium text-teal-700 underline hover:text-teal-800">Input penyaluran</Link>
+                </>
+              )}
+            </div>
+          )}
         </div>
         <Pagination
           currentPage={currentPage}

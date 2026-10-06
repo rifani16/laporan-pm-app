@@ -37,6 +37,8 @@ export default function MasterDataPage() {
     setCurrentPage(1);
   };
 
+  const hasActiveFilter = (isSuperAdmin && activeFilterDaerah !== 'semua') || Boolean(searchTerm);
+
   const resetFilters = () => {
     setFilterDaerah('semua');
     setSearchTerm('');
@@ -80,7 +82,7 @@ export default function MasterDataPage() {
           value={searchTerm}
           onChange={handleSearchChange}
         />
-        {((isSuperAdmin && activeFilterDaerah !== 'semua') || searchTerm) && (
+        {hasActiveFilter && (
           <button
             onClick={resetFilters}
             className="min-h-11 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50"
@@ -100,6 +102,14 @@ export default function MasterDataPage() {
       </p>
       <MasterTable
         data={filteredMaster}
+        emptyState={hasActiveFilter ? (
+          <>
+            Tidak ada PM yang cocok dengan pencarian atau filter.{' '}
+            <button onClick={resetFilters} className="font-medium text-teal-700 underline hover:text-teal-800">Reset filter</button>
+          </>
+        ) : (
+          'Belum ada data PM. Tambahkan lewat tombol "+ Tambah PM" di atas.'
+        )}
         onUpdate={updateMaster}
         onDelete={deleteMaster}
         currentPage={currentPage}

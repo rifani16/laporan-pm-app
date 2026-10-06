@@ -32,20 +32,15 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-gradient-to-br from-teal-800 via-teal-700 to-teal-900 px-4 py-8">
-      <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
-        {/* Header Kartu */}
-        <div className="bg-teal-700 p-6 text-center text-white">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white/10 ring-8 ring-white/10">
-            <LogIn size={28} className="text-white" />
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight">Sistem Pelaporan PM</h1>
-          <p className="mt-1 text-sm text-teal-100">
+    <div className="flex min-h-dvh items-center justify-center bg-gray-100 px-4 py-8">
+      <div className="w-full max-w-md rounded-lg border border-gray-200 bg-white shadow-sm">
+        <div className="border-b border-gray-200 px-6 pb-5 pt-6 sm:px-8">
+          <h1 className="text-2xl font-bold text-gray-900">Sistem Pelaporan PM</h1>
+          <p className="mt-1 text-sm text-gray-600">
             Masuk untuk mengakses data penerima manfaat
           </p>
         </div>
 
-        {/* Form Login */}
         <div className="p-6 sm:p-8">
           {errorMessage && (
             <div
@@ -134,10 +129,6 @@ export default function LoginPage() {
               )}
             </button>
           </form>
-
-          <div className="mt-6 border-t border-gray-100 pt-4 text-center text-xs text-gray-500">
-            <p>Akses akun Super Admin & Admin Daerah</p>
-          </div>
         </div>
       </div>
     </div>

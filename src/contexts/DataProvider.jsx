@@ -39,10 +39,11 @@ export const DataProvider = ({ children }) => {
     masterData,
     salurData,
     refData,
+    loaded: data != null,
     loading,
     error,
     ...actions
-  }), [masterData, salurData, refData, loading, error, actions]);
+  }), [masterData, salurData, refData, data, loading, error, actions]);
 
   return (
     <DataContext.Provider value={contextValue}>

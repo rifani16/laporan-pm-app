@@ -7,7 +7,7 @@ import SortIcon from '../../Common/SortIcon';
 import { useToast } from '../../../hooks/useToast';
 import { useAuth } from '../../../hooks/useAuth';
 
-export default function MasterTable({ data, onUpdate, onDelete, currentPage, onPageChange, rowsPerPage = 10, onRowsPerPageChange }) {
+export default function MasterTable({ data, emptyState, onUpdate, onDelete, currentPage, onPageChange, rowsPerPage = 10, onRowsPerPageChange }) {
   const { isSuperAdmin } = useAuth();
   const { showToast } = useToast();
   const [editItem, setEditItem] = useState(null);
@@ -130,7 +130,7 @@ export default function MasterTable({ data, onUpdate, onDelete, currentPage, onP
             ))}
           </tbody>
         </table>
-        {data.length === 0 && <div className="p-6 text-center text-gray-500">Belum ada data PM yang sesuai.</div>}
+        {data.length === 0 && <div className="p-6 text-center text-gray-600">{emptyState}</div>}
       </div>
       <Pagination
         currentPage={currentPage}
