@@ -32,8 +32,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-gray-100 px-4 py-8">
-      <div className="w-full max-w-md rounded-lg border border-gray-200 bg-white shadow-sm">
+    <div className="flex min-h-dvh items-center justify-center bg-teal-800 px-4 py-8">
+      <div className="w-full max-w-md rounded-lg bg-white shadow-lg">
         <div className="border-b border-gray-200 px-6 pb-5 pt-6 sm:px-8">
           <h1 className="text-2xl font-bold text-gray-900">Sistem Pelaporan PM</h1>
           <p className="mt-1 text-sm text-gray-600">
@@ -56,12 +56,12 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="username"
-                className="mb-1.5 block text-sm font-semibold text-gray-700"
+                className="mb-1.5 block text-sm font-semibold text-gray-800"
               >
                 Username
               </label>
               <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
                   <User size={18} />
                 </div>
                 <input
@@ -73,7 +73,7 @@ export default function LoginPage() {
                   autoComplete="username"
                   required
                   placeholder="Masukkan username"
-                  className="min-h-11 w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm text-gray-900 placeholder-gray-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-200 disabled:bg-gray-100"
+                  className="min-h-11 w-full rounded-lg border border-gray-500 bg-white py-2 pl-10 pr-3 text-base text-gray-900 placeholder-gray-500 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-200 disabled:bg-gray-100"
                 />
               </div>
             </div>
@@ -81,12 +81,12 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="password"
-                className="mb-1.5 block text-sm font-semibold text-gray-700"
+                className="mb-1.5 block text-sm font-semibold text-gray-800"
               >
                 Password
               </label>
               <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
                   <Lock size={18} />
                 </div>
                 <input
@@ -98,13 +98,13 @@ export default function LoginPage() {
                   autoComplete="current-password"
                   required
                   placeholder="Masukkan password"
-                  className="min-h-11 w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-10 text-sm text-gray-900 placeholder-gray-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-200 disabled:bg-gray-100"
+                  className="min-h-11 w-full rounded-lg border border-gray-500 bg-white py-2 pl-10 pr-12 text-base text-gray-900 placeholder-gray-500 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-200 disabled:bg-gray-100"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label={showPassword ? 'Sembunyikan password' : 'Lihat password'}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                  className="absolute inset-y-0 right-0 flex items-center min-w-11 justify-center text-gray-600 hover:text-gray-900"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>

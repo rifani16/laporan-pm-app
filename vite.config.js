@@ -9,11 +9,10 @@ function devApiProxy(env) {
   return {
     name: 'dev-api-proxy',
     configureServer(server) {
-      Object.assign(process.env, {
-        GAS_URL: env.GAS_URL,
-        GAS_API_KEY: env.GAS_API_KEY,
-        ALLOWED_ORIGINS: env.ALLOWED_ORIGINS,
-      });
+      // process.env mengubah undefined jadi string "undefined"; salin yang terisi saja.
+      for (const key of ['GAS_URL', 'GAS_API_KEY', 'ALLOWED_ORIGINS']) {
+        if (env[key]) process.env[key] = env[key];
+      }
 
       server.middlewares.use('/api', async (req, res) => {
         const chunks = [];
