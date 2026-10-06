@@ -39,9 +39,10 @@ Set environment variable `GAS_URL` dan `GAS_API_KEY` (opsional `ALLOWED_ORIGINS`
 | `npm run dev` | server dev (proxy API ikut berjalan) |
 | `npm run build` | build produksi |
 | `npm run lint` | ESLint |
+| `npm test` | tes proxy (Vitest) |
 
 ## Catatan keamanan
 
 - Jangan commit `.env`. Kunci API dan URL GAS bersifat server-only (tanpa prefix `VITE_`).
-- Hash password saat ini SHA-256 bersalt. Password plain text di sheet `Users` otomatis di-hash saat login pertama.
+- Hash password: SHA-256 berulang (`PASSWORD_ITERATIONS` di `gas/Auth.gs`) dengan salt acak. Hash format lama dan password plain text di sheet `Users` otomatis di-upgrade saat login berikutnya. Jalankan `benchmarkPasswordHash` di editor Apps Script untuk memilih jumlah iterasi.
 - Login dikunci 15 menit setelah 5 kali gagal per username.
