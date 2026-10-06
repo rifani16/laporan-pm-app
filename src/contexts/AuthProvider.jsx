@@ -51,7 +51,6 @@ export function AuthProvider({ children }) {
   }, []);
 
   const isSuperAdmin = user?.role === 'super_admin';
-  const isAdminDaerah = user?.role === 'admin_daerah';
   const userDaerah = user?.daerah || '';
 
   return (
@@ -62,7 +61,6 @@ export function AuthProvider({ children }) {
         login,
         logout,
         isSuperAdmin,
-        isAdminDaerah,
         userDaerah
       }}
     >

@@ -77,9 +77,5 @@ export default function useCache(key, fetcher) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const setData = useCallback((newData) => {
-    dispatch({ type: 'SET_DATA', payload: newData });
-  }, []);
-
-  return { data, loading, error, setData, invalidateCache };
+  return { data, loading, error, invalidateCache };
 }

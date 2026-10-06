@@ -90,6 +90,3 @@ export const logoutUser = async () => {
     setSessionToken("");
   }
 };
-
-export const changePassword = (username, oldPassword, newPassword) =>
-  post("CHANGE_PASSWORD", { username, oldPassword, newPassword });

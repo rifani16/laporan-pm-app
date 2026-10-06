@@ -1,81 +1,35 @@
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import { DataContext } from './DataContext';
-import {
-  DATA_CACHE_KEY,
-  fetchAllData,
-  editMaster,
-  addSalur,
-  addMaster,
-  editSalur,
-  addProgram as requestAddProgram,
-  editProgram as requestEditProgram,
-  deleteProgram as requestDeleteProgram,
-  deleteMaster as requestDeleteMaster,
-  deleteSalur as requestDeleteSalur
-} from '../services/api';
+import * as api from '../services/api';
 import useCache from '../hooks/useCache';
 
 const EMPTY_LIST = [];
 const EMPTY_REF_DATA = { asnaf: EMPTY_LIST, program: EMPTY_LIST, daerah: EMPTY_LIST };
 
 export const DataProvider = ({ children }) => {
-  const { data, loading, error, invalidateCache } = useCache(DATA_CACHE_KEY, fetchAllData);
+  const { data, loading, error, invalidateCache } = useCache(api.DATA_CACHE_KEY, api.fetchAllData);
 
-  const refreshData = useCallback(() => invalidateCache(), [invalidateCache]);
+  const actions = useMemo(() => {
+    // Jalankan mutasi, lalu muat ulang data bila berhasil.
+    const withRefresh = (request) => async (...args) => {
+      const result = await request(...args);
+      if (result.success) await invalidateCache();
+      return result;
+    };
 
-  const updateMaster = useCallback(async (idPm, updatedFields) => {
-    const result = await editMaster(idPm, updatedFields);
-    if (result.success) await refreshData();
-    return result;
-  }, [refreshData]);
-
-  const createSalur = useCallback(async (payload) => {
-    const result = await addSalur(payload);
-    if (result.success) await refreshData();
-    return result;
-  }, [refreshData]);
-
-  const createMaster = useCallback(async (payload) => {
-    const result = await addMaster(payload);
-    if (result.success) await refreshData();
-    return result;
-  }, [refreshData]);
-
-  const updateSalur = useCallback(async (payload) => {
-    const result = await editSalur(payload);
-    if (result.success) await refreshData();
-    return result;
-  }, [refreshData]);
-
-  const deleteMaster = useCallback(async (idPm) => {
-    const result = await requestDeleteMaster(idPm);
-    if (result.success) await refreshData();
-    return result;
-  }, [refreshData]);
-
-  const deleteSalur = useCallback(async (idSalur) => {
-    const result = await requestDeleteSalur(idSalur);
-    if (result.success) await refreshData();
-    return result;
-  }, [refreshData]);
-
-  const createProgram = useCallback(async (name) => {
-    const result = await requestAddProgram(name);
-    if (result.success) await refreshData();
-    return result;
-  }, [refreshData]);
-
-  const updateProgram = useCallback(async (oldName, newName) => {
-    const result = await requestEditProgram(oldName, newName);
-    if (result.success) await refreshData();
-    return result;
-  }, [refreshData]);
-
-  const deleteProgram = useCallback(async (name) => {
-    const result = await requestDeleteProgram(name);
-    if (result.success) await refreshData();
-    return result;
-  }, [refreshData]);
+    return {
+      refreshData: invalidateCache,
+      updateMaster: withRefresh(api.editMaster),
+      createMaster: withRefresh(api.addMaster),
+      deleteMaster: withRefresh(api.deleteMaster),
+      createSalur: withRefresh(api.addSalur),
+      updateSalur: withRefresh(api.editSalur),
+      deleteSalur: withRefresh(api.deleteSalur),
+      createProgram: withRefresh(api.addProgram),
+      updateProgram: withRefresh(api.editProgram),
+      deleteProgram: withRefresh(api.deleteProgram)
+    };
+  }, [invalidateCache]);
 
   const masterData = data?.master || EMPTY_LIST;
   const salurData = data?.salur || EMPTY_LIST;
@@ -87,17 +41,8 @@ export const DataProvider = ({ children }) => {
     refData,
     loading,
     error,
-    refreshData,
-    updateMaster,
-    createSalur,
-    createMaster,
-    updateSalur,
-    deleteMaster,
-    deleteSalur,
-    createProgram,
-    updateProgram,
-    deleteProgram
-  }), [masterData, salurData, refData, loading, error, refreshData, updateMaster, createSalur, createMaster, updateSalur, deleteMaster, deleteSalur, createProgram, updateProgram, deleteProgram]);
+    ...actions
+  }), [masterData, salurData, refData, loading, error, actions]);
 
   return (
     <DataContext.Provider value={contextValue}>
