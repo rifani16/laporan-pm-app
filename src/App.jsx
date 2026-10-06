@@ -59,7 +59,7 @@ function AuthenticatedApp() {
         )}
         <div
           className="flex flex-1 flex-col overflow-hidden"
-          inert={sidebarOpen ? '' : undefined}
+          inert={sidebarOpen}
           aria-hidden={sidebarOpen || undefined}
         >
           <Header toggleSidebar={toggleSidebar} />

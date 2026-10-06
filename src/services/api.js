@@ -1,121 +1,91 @@
 const API_BASE = import.meta.env.VITE_API_URL || "/api";
+const TOKEN_KEY = "pm_auth_token";
+
+export const SESSION_EXPIRED_EVENT = "pm-session-expired";
+
+export const getSessionToken = () => {
+  try {
+    return localStorage.getItem(TOKEN_KEY) || "";
+  } catch {
+    return "";
+  }
+};
+
+export const setSessionToken = (token) => {
+  try {
+    if (token) localStorage.setItem(TOKEN_KEY, token);
+    else localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    // localStorage tidak tersedia
+  }
+};
+
+const request = async (body) => {
+  const init = {
+    method: body ? "POST" : "GET",
+    headers: { "X-Session-Token": getSessionToken() },
+  };
+  if (body) {
+    init.headers["Content-Type"] = "application/json";
+    init.body = JSON.stringify(body);
+  }
+  const res = await fetch(`${API_BASE}`, init);
+  const json = await res.json();
+  if (json.code === 401 && body?.action !== "LOGIN") {
+    window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+  }
+  return json;
+};
+
+const post = (action, data) => request({ action, data });
 
 export const fetchAllData = async () => {
-  const res = await fetch(`${API_BASE}`);
-  const json = await res.json();
+  const json = await request();
   if (!json.success) throw new Error(json.error || "Gagal fetch data");
   return json.data;
 };
 
-export const editMaster = async (idPm, updatedFields) => {
-  const payload = {
-    action: "EDIT_MASTER",
-    data: { "ID PM": idPm, ...updatedFields },
-  };
-  const res = await fetch(`${API_BASE}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  return await res.json();
-};
+export const editMaster = (idPm, updatedFields) =>
+  post("EDIT_MASTER", { "ID PM": idPm, ...updatedFields });
 
-export const deleteMaster = async (idPm) => {
-  const res = await fetch(`${API_BASE}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "HAPUS_MASTER", data: { "ID PM": idPm } }),
-  });
-  return await res.json();
-};
+export const deleteMaster = (idPm) => post("HAPUS_MASTER", { "ID PM": idPm });
 
-export const addMaster = async (payload) => {
-  const res = await fetch(`${API_BASE}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "TAMBAH_MASTER", data: payload }),
-  });
-  return await res.json();
-};
+export const addMaster = (payload) => post("TAMBAH_MASTER", payload);
 
-export const addSalur = async (payload) => {
-  const res = await fetch(`${API_BASE}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "TAMBAH_SALUR", data: payload }),
-  });
-  return await res.json();
-};
+export const addSalur = (payload) => post("TAMBAH_SALUR", payload);
 
-export const editSalur = async (payload) => {
-  const res = await fetch(`${API_BASE}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "EDIT_SALUR", data: payload }),
-  });
-  return await res.json();
-};
+export const editSalur = (payload) => post("EDIT_SALUR", payload);
 
-export const deleteSalur = async (idSalur) => {
-  const res = await fetch(`${API_BASE}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "HAPUS_PM_PROGRAM", data: { "ID SALUR": idSalur } }),
-  });
-  return await res.json();
-};
+export const deleteSalur = (idSalur) =>
+  post("HAPUS_PM_PROGRAM", { "ID SALUR": idSalur });
 
-export const addProgram = async (name) => {
-  const res = await fetch(`${API_BASE}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "TAMBAH_PROGRAM", data: { name } }),
-  });
-  return await res.json();
-};
+export const addProgram = (name) => post("TAMBAH_PROGRAM", { name });
 
-export const editProgram = async (oldName, newName) => {
-  const res = await fetch(`${API_BASE}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "EDIT_PROGRAM", data: { oldName, newName } }),
-  });
-  return await res.json();
-};
+export const editProgram = (oldName, newName) =>
+  post("EDIT_PROGRAM", { oldName, newName });
 
-export const deleteProgram = async (name) => {
-  const res = await fetch(`${API_BASE}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "HAPUS_PROGRAM", data: { name } }),
-  });
-  return await res.json();
-};
+export const deleteProgram = (name) => post("HAPUS_PROGRAM", { name });
 
 export const loginUser = async (username, password) => {
-  const res = await fetch(`${API_BASE}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      action: "LOGIN",
-      data: { username, password }
-    }),
-  });
-  const json = await res.json();
+  const json = await post("LOGIN", { username, password });
   if (!json.success) {
     throw new Error(json.error || json.message || "Login gagal");
   }
-  return json.user || (json.data && json.data.user);
+  const user = json.user || (json.data && json.data.user);
+  const token = json.token || (json.data && json.data.token);
+  setSessionToken(token);
+  return user;
 };
 
-export const changePassword = async (username, oldPassword, newPassword) => {
-  const res = await fetch(`${API_BASE}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      action: "CHANGE_PASSWORD",
-      data: { username, oldPassword, newPassword }
-    }),
-  });
-  return await res.json();
+export const logoutUser = async () => {
+  try {
+    await post("LOGOUT", {});
+  } catch {
+    // abaikan; sesi lokal tetap dihapus
+  } finally {
+    setSessionToken("");
+  }
 };
+
+export const changePassword = (username, oldPassword, newPassword) =>
+  post("CHANGE_PASSWORD", { username, oldPassword, newPassword });

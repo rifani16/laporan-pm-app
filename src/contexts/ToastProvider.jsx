@@ -1,4 +1,4 @@
-import { createContext, useState, useCallback } from 'react';
+import { createContext, useState, useCallback, useRef, useEffect } from 'react';
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const ToastContext = createContext();
@@ -6,17 +6,24 @@ export const ToastContext = createContext();
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
 
-  const showToast = useCallback((message, type = 'success') => {
-    const id = Date.now();
-    setToasts(prev => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-    }, 3000);
+  const timers = useRef(new Map());
+
+  const removeToast = useCallback((id) => {
+    clearTimeout(timers.current.get(id));
+    timers.current.delete(id);
+    setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
-  const removeToast = (id) => {
-    setToasts(prev => prev.filter(t => t.id !== id));
-  };
+  const showToast = useCallback((message, type = 'success') => {
+    const id = crypto.randomUUID();
+    setToasts(prev => [...prev, { id, message, type }]);
+    timers.current.set(id, setTimeout(() => removeToast(id), 3000));
+  }, [removeToast]);
+
+  useEffect(() => {
+    const active = timers.current;
+    return () => active.forEach(clearTimeout);
+  }, []);
 
   return (
     <ToastContext.Provider value={{ showToast }}>

@@ -3,33 +3,58 @@ import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
+// Dev: jalankan handler yang sama dengan Vercel (api/index.js) agar API key
+// dan token sesi diproses seperti di produksi.
+function devApiProxy(env) {
+  return {
+    name: 'dev-api-proxy',
+    configureServer(server) {
+      Object.assign(process.env, {
+        GAS_URL: env.GAS_URL,
+        GAS_API_KEY: env.GAS_API_KEY,
+        ALLOWED_ORIGINS: env.ALLOWED_ORIGINS,
+      });
+
+      server.middlewares.use('/api', async (req, res) => {
+        const chunks = [];
+        for await (const chunk of req) chunks.push(chunk);
+        const raw = Buffer.concat(chunks).toString();
+        try {
+          req.body = raw ? JSON.parse(raw) : undefined;
+        } catch {
+          req.body = undefined;
+        }
+
+        const shim = {
+          setHeader: (k, v) => res.setHeader(k, v),
+          status(code) {
+            res.statusCode = code;
+            return shim;
+          },
+          json(payload) {
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(payload));
+          },
+          end: () => res.end(),
+        };
+
+        const { default: handler } = await server.ssrLoadModule('/api/index.js');
+        await handler(req, shim);
+      });
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  // P1-01: GAS_URL server-only (tanpa VITE_ agar tidak bocor ke bundle client)
-  const gasUrl = env.GAS_URL;
 
-  const config = {
+  return {
     base: '/',
-    plugins: [react()],
+    plugins: [react(), devApiProxy(env)],
     resolve: {
       alias: {
         '@': path.resolve(process.cwd(), './src'),
       },
     },
   };
-
-  // Proxy hanya untuk development
-  if (mode === 'development') {
-    config.server = {
-      proxy: {
-        '/api': {
-          target: gasUrl,
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ''),
-        },
-      },
-    };
-  }
-
-  return config;
 });
