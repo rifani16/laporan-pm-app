@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { DataContext } from './DataContext';
 import {
+  DATA_CACHE_KEY,
   fetchAllData,
   editMaster,
   addSalur,
@@ -18,7 +19,7 @@ const EMPTY_LIST = [];
 const EMPTY_REF_DATA = { asnaf: EMPTY_LIST, program: EMPTY_LIST, daerah: EMPTY_LIST };
 
 export const DataProvider = ({ children }) => {
-  const { data, loading, error, invalidateCache } = useCache('app-data', fetchAllData);
+  const { data, loading, error, invalidateCache } = useCache(DATA_CACHE_KEY, fetchAllData);
 
   const refreshData = useCallback(() => invalidateCache(), [invalidateCache]);
 

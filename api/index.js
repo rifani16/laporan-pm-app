@@ -5,6 +5,7 @@ const DEFAULT_ALLOWED_ORIGINS = [
 ];
 
 const MAX_BODY_BYTES = 100 * 1024;
+const UPSTREAM_TIMEOUT_MS = 20000;
 
 function getAllowedOrigins() {
   const fromEnv = (process.env.ALLOWED_ORIGINS || '')
@@ -76,20 +77,24 @@ export default async function handler(req, res) {
     fetchOptions.body = payload;
   }
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15000);
-  try {
-    const response = await fetch(target, { ...fetchOptions, signal: controller.signal });
-    const data = await response.json();
-    res.status(response.status).json(data);
-  } catch (err) {
-    console.error('Proxy error:', err);
-    if (err.name === 'AbortError') {
-      res.status(504).json({ error: 'Gateway Timeout' });
-    } else {
-      res.status(502).json({ error: 'Bad gateway' });
+  // GAS cold start bisa >10 detik. Hanya GET (idempoten) yang dicoba ulang.
+  const attempts = req.method === 'GET' ? 2 : 1;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
+    try {
+      const response = await fetch(target, { ...fetchOptions, signal: controller.signal });
+      const data = await response.json();
+      return res.status(response.status).json(data);
+    } catch (err) {
+      console.error(`Proxy error (attempt ${attempt}/${attempts}):`, err);
+      if (attempt < attempts) continue;
+      if (err.name === 'AbortError') {
+        return res.status(504).json({ error: 'Gateway Timeout' });
+      }
+      return res.status(502).json({ error: 'Bad gateway' });
+    } finally {
+      clearTimeout(timeout);
     }
-  } finally {
-    clearTimeout(timeout);
   }
 }

@@ -11,8 +11,12 @@ export const getSessionToken = () => {
   }
 };
 
+// Cache data dibuat per sesi; hapus agar data user/daerah lain tidak terbawa.
+export const DATA_CACHE_KEY = "app-data";
+
 export const setSessionToken = (token) => {
   try {
+    localStorage.removeItem(DATA_CACHE_KEY);
     if (token) localStorage.setItem(TOKEN_KEY, token);
     else localStorage.removeItem(TOKEN_KEY);
   } catch {

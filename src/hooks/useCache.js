@@ -1,4 +1,4 @@
-import { useReducer, useEffect, useCallback } from 'react';
+import { useReducer, useEffect, useCallback, useRef } from 'react';
 
 const CACHE_TTL = 30 * 60 * 1000; // 30 menit (lebih lama)
 const initialRequests = new Map();
@@ -31,8 +31,15 @@ function fetchInitialData(key, fetcher) {
 export default function useCache(key, fetcher) {
   const [state, dispatch] = useReducer(cacheReducer, initialState);
   const { data, loading, error } = state;
+  const mounted = useRef(true);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
 
   const loadData = useCallback(async (force = false) => {
+    if (!mounted.current) return;
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
       if (!force) {
@@ -52,9 +59,12 @@ export default function useCache(key, fetcher) {
       // Deduplikasi request awal yang dijalankan dua kali oleh StrictMode.
       // Refresh paksa tetap selalu mengambil data terbaru.
       const fresh = force ? await fetcher() : await fetchInitialData(key, fetcher);
+      // Komponen sudah unmount (mis. logout): jangan tulis ulang cache sesi lama.
+      if (!mounted.current) return;
       localStorage.setItem(key, JSON.stringify({ timestamp: Date.now(), value: fresh }));
       dispatch({ type: 'SET_DATA', payload: fresh });
     } catch (err) {
+      if (!mounted.current) return;
       console.error('Gagal mengambil data:', err);
       dispatch({ type: 'SET_ERROR', payload: err });
     }
