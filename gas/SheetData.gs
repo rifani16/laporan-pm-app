@@ -9,10 +9,34 @@ function getSheetData(sheetName) {
   return rows.slice(1).map(row => {
     const item = {};
     headers.forEach((header, index) => {
-      item[header] = row[index];
+      item[header] = formatCellValue(row[index]);
     });
     return item;
   });
+}
+
+// Sel tanggal dikirim sebagai teks di zona waktu script, supaya tidak bergeser sehari di browser.
+function formatCellValue(value) {
+  if (!(value instanceof Date)) return value;
+  const timeZone = Session.getScriptTimeZone();
+  const time = Utilities.formatDate(value, timeZone, 'HH:mm');
+  return Utilities.formatDate(value, timeZone, time === '00:00' ? 'yyyy-MM-dd' : 'yyyy-MM-dd HH:mm');
+}
+
+function getOrCreateSheet(name, headers) {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = spreadsheet.getSheetByName(name) || spreadsheet.insertSheet(name);
+  ensureColumns(sheet, headers);
+  return sheet;
+}
+
+// Tambah header yang belum ada di ujung kanan; header yang sudah ada tidak diubah.
+function ensureColumns(sheet, names) {
+  const lastColumn = sheet.getLastColumn();
+  const headers = lastColumn ? sheet.getRange(1, 1, 1, lastColumn).getValues()[0] : [];
+  const missing = names.filter(name => !headers.includes(name));
+  if (missing.length) sheet.getRange(1, lastColumn + 1, 1, missing.length).setValues([missing]);
+  return headers.concat(missing);
 }
 
 function getRefData() {

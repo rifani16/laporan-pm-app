@@ -15,6 +15,7 @@ import PenyaluranPage from './pages/PenyaluranPage';
 import ProgramPenerimaPage from './pages/ProgramPenerimaPage';
 import ProgramManagementPage from './pages/ProgramManagementPage';
 import UserManagementPage from './pages/UserManagementPage';
+import KegiatanPage from './pages/KegiatanPage';
 
 function StatePanel({ title, children }) {
   return (
@@ -26,10 +27,10 @@ function StatePanel({ title, children }) {
 }
 
 function PageContent() {
-  const { isSuperAdmin, userDaerah } = useAuth();
+  const { seesAllDaerah, userDaerah } = useAuth();
   const { loaded, error } = useData();
 
-  if (!isSuperAdmin && !userDaerah) {
+  if (!seesAllDaerah && !userDaerah) {
     return (
       <StatePanel title="Akun belum memiliki daerah">
         Data hanya tampil untuk daerah akun Anda. Minta Super Admin mengisi kolom daerah untuk akun ini di sheet Users, lalu login ulang.
@@ -51,6 +52,7 @@ function PageContent() {
       <Route path="/" element={<DashboardPage />} />
       <Route path="/master" element={<MasterDataPage />} />
       <Route path="/salur" element={<PenyaluranPage />} />
+      <Route path="/kegiatan" element={<KegiatanPage />} />
       <Route path="/program-penerima" element={<ProgramPenerimaPage />} />
       <Route
         path="/program"

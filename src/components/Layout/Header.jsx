@@ -7,6 +7,7 @@ const PAGE_TITLES = {
   '/': 'Dashboard',
   '/master': 'Daftar Penerima Manfaat',
   '/salur': 'Input Penyaluran',
+  '/kegiatan': 'Kegiatan Penyaluran',
   '/program-penerima': 'Penerima per Program',
   '/program': 'Manajemen Program',
   '/akun': 'Kelola Akun'

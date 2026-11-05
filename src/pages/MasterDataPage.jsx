@@ -24,14 +24,14 @@ const EXPORT_COLUMNS = [
 
 export default function MasterDataPage() {
   const { masterData, updateMaster, deleteMaster, loading, refData } = useData();
-  const { isSuperAdmin, userDaerah } = useAuth();
+  const { seesAllDaerah, userDaerah } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [filterDaerah, setFilterDaerah] = useState('semua');
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const activeFilterDaerah = !isSuperAdmin && userDaerah ? userDaerah : filterDaerah;
+  const activeFilterDaerah = !seesAllDaerah && userDaerah ? userDaerah : filterDaerah;
 
   const filteredMaster = masterData
     .filter(pm => activeFilterDaerah === 'semua' || pm['DAERAH'] === activeFilterDaerah)
@@ -41,7 +41,7 @@ export default function MasterDataPage() {
       return nama.includes(searchTerm.toLowerCase());
     });
 
-  const daerahList = isSuperAdmin
+  const daerahList = seesAllDaerah
     ? ['semua', ...(refData.daerah || [])]
     : [userDaerah || 'semua'];
 
@@ -55,7 +55,7 @@ export default function MasterDataPage() {
     setCurrentPage(1);
   };
 
-  const hasActiveFilter = (isSuperAdmin && activeFilterDaerah !== 'semua') || Boolean(searchTerm);
+  const hasActiveFilter = (seesAllDaerah && activeFilterDaerah !== 'semua') || Boolean(searchTerm);
 
   const resetFilters = () => {
     setFilterDaerah('semua');
@@ -77,7 +77,7 @@ export default function MasterDataPage() {
           className="min-h-11 flex-1 min-w-[140px] rounded-lg border bg-white px-3 py-2 text-sm disabled:bg-gray-100 disabled:text-gray-600"
           value={activeFilterDaerah}
           onChange={handleFilterChange}
-          disabled={!isSuperAdmin}
+          disabled={!seesAllDaerah}
         >
           {daerahList.map(d => (
             <option key={d} value={d}>

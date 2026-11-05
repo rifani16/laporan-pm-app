@@ -1,4 +1,5 @@
 export const EMPTY_SALUR_FORM = {
+  ID_KEGIATAN: '',
   PROGRAM: '',
   BENTUK_PENERIMAAN: { uang: false, barang: false },
   JUMLAH_PENERIMAAN: '',
@@ -21,7 +22,8 @@ export const toggleBentuk = (form, type) => ({
 export function buildSalurPayload(pm, namaPenerima, form) {
   if (!pm) return { error: 'Pilih ID PM' };
   if (!namaPenerima) return { error: 'Pilih nama penerima' };
-  if (!form.PROGRAM) return { error: 'Pilih program' };
+  // PROGRAM hanya dipakai transaksi lama tanpa kegiatan; selain itu server mengambilnya dari kegiatan.
+  if (!form.ID_KEGIATAN && !form.PROGRAM) return { error: 'Pilih kegiatan penyaluran' };
   const { uang, barang } = form.BENTUK_PENERIMAAN;
   if (!uang && !barang) return { error: 'Pilih bentuk penerimaan' };
   const jumlah = Number(form.JUMLAH_PENERIMAAN);
@@ -36,6 +38,7 @@ export function buildSalurPayload(pm, namaPenerima, form) {
       'NIK PENERIMA': selected.nik,
       'DAERAH': pm['DAERAH'] || '',
       'ALAMAT': pm['ALAMAT'] || '',
+      'ID KEGIATAN': form.ID_KEGIATAN,
       'PROGRAM': form.PROGRAM,
       'BENTUK PENERIMAAN': [uang && 'Uang', barang && 'Barang'].filter(Boolean).join(', '),
       'JUMLAH PENERIMAAN': jumlah,

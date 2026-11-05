@@ -5,35 +5,44 @@ import SummaryMetrics from '../components/Features/Dashboard/SummaryMetrics';
 import TabelPerDaerah from '../components/Features/Dashboard/TabelPerDaerah';
 import TabelPerProgram from '../components/Features/Dashboard/TabelPerProgram';
 import MatriksSilang from '../components/Features/Dashboard/MatriksSilang';
+import DateRangeFilter from '../components/Common/DateRangeFilter';
+import { inDateRange, indexKegiatan } from '../services/kegiatan';
 
 export default function DashboardPage() {
-  const { salurData, masterData, loading, refData } = useData();
-  const { isSuperAdmin, userDaerah } = useAuth();
+  const { salurData, masterData, loading, refData, kegiatanList } = useData();
+  const { seesAllDaerah, userDaerah } = useAuth();
 
   const [filterDaerah, setFilterDaerah] = useState('semua');
   const [filterProgram, setFilterProgram] = useState('semua');
+  const [periode, setPeriode] = useState({ dari: '', sampai: '' });
+  const hasPeriode = Boolean(periode.dari || periode.sampai);
 
-  const activeFilterDaerah = !isSuperAdmin && userDaerah ? userDaerah : filterDaerah;
+  const activeFilterDaerah = !seesAllDaerah && userDaerah ? userDaerah : filterDaerah;
 
-  const daerahList = isSuperAdmin
+  const daerahList = seesAllDaerah
     ? ['semua', ...(refData.daerah || [])]
     : [userDaerah || 'semua'];
 
   const programList = ['semua', ...(refData.program || [])];
 
+  const kegiatanById = useMemo(() => indexKegiatan(kegiatanList), [kegiatanList]);
+
   const filteredSalur = useMemo(() => {
     return salurData.filter((s) => {
+      const tanggal = kegiatanById.get(String(s['ID KEGIATAN'] || ''))?.TANGGAL;
+      if (!inDateRange(tanggal, periode.dari, periode.sampai)) return false;
       const matchDaerah =
         activeFilterDaerah === 'semua' || s['DAERAH'] === activeFilterDaerah;
       const matchProgram =
         filterProgram === 'semua' || s['PROGRAM'] === filterProgram;
       return matchDaerah && matchProgram;
     });
-  }, [salurData, activeFilterDaerah, filterProgram]);
+  }, [salurData, activeFilterDaerah, filterProgram, kegiatanById, periode]);
 
   const resetFilters = () => {
     setFilterDaerah('semua');
     setFilterProgram('semua');
+    setPeriode({ dari: '', sampai: '' });
   };
 
   if (loading && salurData.length === 0 && masterData.length === 0) {
@@ -54,7 +63,7 @@ export default function DashboardPage() {
             className="min-h-11 rounded-lg border bg-white px-3 py-2 text-sm disabled:bg-gray-100 disabled:text-gray-600"
             value={activeFilterDaerah}
             onChange={(e) => setFilterDaerah(e.target.value)}
-            disabled={!isSuperAdmin}
+            disabled={!seesAllDaerah}
           >
             {daerahList.map((d) => (
               <option key={d} value={d}>
@@ -74,7 +83,7 @@ export default function DashboardPage() {
               </option>
             ))}
           </select>
-          {((isSuperAdmin && activeFilterDaerah !== 'semua') || filterProgram !== 'semua') && (
+          {((seesAllDaerah && activeFilterDaerah !== 'semua') || filterProgram !== 'semua' || hasPeriode) && (
             <button
               onClick={resetFilters}
               className="min-h-11 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50"
@@ -83,6 +92,15 @@ export default function DashboardPage() {
             </button>
           )}
         </div>
+      </div>
+
+      <div className="rounded-lg bg-white p-4 shadow">
+        <DateRangeFilter dari={periode.dari} sampai={periode.sampai} onChange={setPeriode} />
+        <p className="mt-2 text-sm text-gray-600">
+          {hasPeriode
+            ? 'Berdasarkan tanggal kegiatan. Transaksi tanpa kegiatan tidak ikut dihitung.'
+            : 'Semua periode, termasuk transaksi tanpa kegiatan.'}
+        </p>
       </div>
 
       <SummaryMetrics salurData={filteredSalur} masterData={masterData} />

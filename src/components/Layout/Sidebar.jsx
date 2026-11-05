@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   Users,
   PlusCircle,
+  CalendarDays,
   ListFilter,
   Settings,
   UserCog,
@@ -11,12 +12,15 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
+const ROLE_LABELS = { super_admin: 'Super Admin', admin_wilayah: 'Admin Wilayah', admin_daerah: 'Admin Daerah' };
+
 export default function Sidebar({ isMobile = false, onClose }) {
   const { user, logout, isSuperAdmin } = useAuth();
 
   const navItems = [
     { to: '/', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/master', label: 'Daftar PM', icon: Users },
+    { to: '/kegiatan', label: 'Kegiatan Penyaluran', icon: CalendarDays },
     { to: '/salur', label: 'Input Penyaluran', icon: PlusCircle },
     { to: '/program-penerima', label: 'Penerima per Program', icon: ListFilter },
     { to: '/program', label: 'Manajemen Program', icon: Settings, superOnly: true },
@@ -71,9 +75,9 @@ export default function Sidebar({ isMobile = false, onClose }) {
                     : 'bg-teal-600 text-teal-50'
                 }`}
               >
-                {isSuperAdmin ? 'Super Admin' : 'Admin Daerah'}
+                {ROLE_LABELS[user.role] || 'Admin Daerah'}
               </span>
-              {!isSuperAdmin && user.daerah && (
+              {user.role === 'admin_daerah' && user.daerah && (
                 <span className="rounded-full bg-teal-700/80 px-2 py-0.5 text-teal-100">
                   {user.daerah}
                 </span>

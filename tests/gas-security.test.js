@@ -19,35 +19,50 @@ const CacheService = {
   })
 };
 // Stub sheet: tiap sheet berupa array baris (baris 0 = header), indeks 1-based seperti Apps Script.
-const sheets = { Users: [], MASTER_PM: [] };
+const REF_SHEET = [['Asnaf', 'Program', 'Daerah'], ['Fakir', 'Beasiswa', 'Bandar Lampung'], ['Miskin', 'Sembako', 'Metro']];
+const sheets = { Users: [], MASTER_PM: [], REF: REF_SHEET };
 const makeSheet = (name) => {
   const rows = () => sheets[name];
+  const rowAt = index => (rows()[index] ||= []);
   return {
     getDataRange: () => ({ getValues: () => rows().map(row => [...row]) }),
     getLastRow: () => rows().length,
-    getLastColumn: () => rows()[0].length,
+    getLastColumn: () => (rows().length ? rows()[0].length : 0),
     getRange: (row, column, numRows = 1, numColumns = 1) => ({
       getValues: () => rows().slice(row - 1, row - 1 + numRows).map(r => r.slice(column - 1, column - 1 + numColumns)),
-      setValue: v => { rows()[row - 1][column - 1] = v; },
-      setValues: values => values.forEach((r, i) => r.forEach((v, j) => { rows()[row - 1 + i][column - 1 + j] = v; }))
+      setValue: v => { rowAt(row - 1)[column - 1] = v; },
+      setValues: values => values.forEach((r, i) => r.forEach((v, j) => { rowAt(row - 1 + i)[column - 1 + j] = v; }))
     }),
-    appendRow: row => rows().push(row)
+    appendRow: row => rows().push(row),
+    deleteRow: row => rows().splice(row - 1, 1)
   };
 };
 const SpreadsheetApp = {
-  getActiveSpreadsheet: () => ({ getSheetByName: name => (sheets[name] ? makeSheet(name) : null) })
+  getActiveSpreadsheet: () => ({
+    getSheetByName: name => (sheets[name] ? makeSheet(name) : null),
+    insertSheet: name => { sheets[name] = []; return makeSheet(name); }
+  })
 };
 const LockService = { getScriptLock: () => ({ tryLock: () => true, releaseLock: () => {} }) };
+// formatDate disederhanakan: zona waktu UTC, cukup untuk pola yang dipakai di SheetData.gs.
+Utilities.formatDate = (date, _tz, pattern) => {
+  const iso = date.toISOString();
+  return { 'HH:mm': iso.slice(11, 16), 'yyyy-MM-dd': iso.slice(0, 10), 'yyyy-MM-dd HH:mm': `${iso.slice(0, 10)} ${iso.slice(11, 16)}` }[pattern];
+};
 const context = vm.createContext({
   Utilities,
   CacheService,
   SpreadsheetApp,
   LockService,
-  SHEET_NAMES: { USERS: 'Users', MASTER: 'MASTER_PM' },
-  getRefData: () => ({ daerah: ['Bandar Lampung', 'Metro'] }),
-  successResponse: message => ({ message })
+  Session: { getScriptTimeZone: () => 'UTC' },
+  SHEET_NAMES: { USERS: 'Users', MASTER: 'MASTER_PM', SALUR: 'SALUR', REF: 'REF', KEGIATAN: 'KEGIATAN' },
+  invalidateMasterCache: () => {},
+  getApiKey: () => 'KEY',
+  // Responses.gs membungkus JSON di ContentService; stub ini mengembalikan objeknya langsung.
+  ContentService: { createTextOutput: text => ({ setMimeType: () => JSON.parse(text) }), MimeType: { JSON: 'json' } }
 });
-for (const file of ['Security.gs', 'Auth.gs', 'UserManagement.gs', 'MasterPm.gs']) {
+const GAS_FILES = ['SheetData.gs', 'Security.gs', 'Auth.gs', 'UserManagement.gs', 'MasterPm.gs', 'ProgramManagement.gs', 'Kegiatan.gs', 'Penyaluran.gs', 'ApiHandlers.gs', 'Responses.gs'];
+for (const file of GAS_FILES) {
   vm.runInContext(readFileSync(new URL(`../gas/${file}`, import.meta.url), 'utf8'), context);
 }
 const sanitize = (json) => vm.runInContext(`sanitizeObject(JSON.parse(${JSON.stringify(json)}))`, context);
@@ -205,5 +220,148 @@ describe('NIK uniqueness', () => {
     reset();
     sheets.MASTER_PM.push(['KS-2026-00002', 'Budi kembar', NIK_A, '', 'Metro']);
     expect(() => context.editMasterRow({ 'ID PM': 'KS-2026-00002', 'NAMA PM': 'Budi K', NIK: NIK_A })).not.toThrow();
+  });
+});
+
+describe('kegiatan penyaluran', () => {
+  const SALUR_HEADER = ['ID SALUR', 'ID PM', 'NAMA PENERIMA', 'DAERAH', 'PROGRAM', 'JUMLAH PENERIMAAN', 'KETERANGAN'];
+  const kegiatanInput = { 'NAMA KEGIATAN': 'Beasiswa Ganjil', PROGRAM: 'Beasiswa', TANGGAL: '2026-11-05', ANGGARAN: '5000000', STATUS: 'Berjalan' };
+  const col = (sheet, name) => sheets[sheet][0].indexOf(name);
+  const cell = (sheet, row, name) => sheets[sheet][row][col(sheet, name)];
+
+  const reset = () => {
+    delete sheets.KEGIATAN;
+    sheets.REF = REF_SHEET.map(row => [...row]);
+    sheets.SALUR = [SALUR_HEADER, ['TX-2026-00001', 'KS-2026-00001', 'Budi', 'Metro', 'Sembako', 100000, 'lama']];
+  };
+
+  it('creates the KEGIATAN sheet on first add and numbers ids', () => {
+    reset();
+    expect(context.addKegiatan(kegiatanInput)).toBe('KG-00001');
+    expect(context.addKegiatan({ ...kegiatanInput, 'NAMA KEGIATAN': 'Kedua' })).toBe('KG-00002');
+    expect(sheets.KEGIATAN[0]).toEqual(['ID KEGIATAN', 'NAMA KEGIATAN', 'PROGRAM', 'TANGGAL', 'LOKASI', 'SUMBER DANA', 'ANGGARAN', 'PENANGGUNG JAWAB', 'STATUS', 'KETERANGAN']);
+    expect(cell('KEGIATAN', 1, 'ANGGARAN')).toBe(5000000);
+  });
+
+  it('validates program, date, budget, and status', () => {
+    reset();
+    expect(() => context.addKegiatan({ ...kegiatanInput, PROGRAM: 'Tidak Ada' })).toThrow('program');
+    expect(() => context.addKegiatan({ ...kegiatanInput, TANGGAL: '2026-02-30' })).toThrow('Tanggal');
+    expect(() => context.addKegiatan({ ...kegiatanInput, ANGGARAN: '-1' })).toThrow('Anggaran');
+    expect(() => context.addKegiatan({ ...kegiatanInput, STATUS: 'Batal' })).toThrow('Status');
+    expect(() => context.addKegiatan({ ...kegiatanInput, 'NAMA KEGIATAN': ' ' })).toThrow('Nama kegiatan');
+  });
+
+  it('adds a transaction under a kegiatan with program and audit trail from the server', () => {
+    reset();
+    context.addKegiatan(kegiatanInput);
+    const id = context.addSalurRecord({ 'ID PM': 'KS-2026-00002', 'ID KEGIATAN': 'KG-00001', PROGRAM: 'Sembako', 'JUMLAH PENERIMAAN': 250000, 'DIINPUT OLEH': 'palsu', actor: 'KSBL5' });
+    expect(id).toBe('TX-2026-00002');
+    expect(cell('SALUR', 2, 'PROGRAM')).toBe('Beasiswa');
+    expect(cell('SALUR', 2, 'ID KEGIATAN')).toBe('KG-00001');
+    expect(cell('SALUR', 2, 'DIINPUT OLEH')).toBe('KSBL5');
+    expect(Object.prototype.toString.call(cell('SALUR', 2, 'DIINPUT PADA'))).toBe('[object Date]');
+  });
+
+  it('rejects transactions without a kegiatan or into a finished one', () => {
+    reset();
+    context.addKegiatan({ ...kegiatanInput, STATUS: 'Selesai' });
+    expect(() => context.addSalurRecord({ 'ID PM': 'KS-2026-00002' })).toThrow('Pilih kegiatan');
+    expect(() => context.addSalurRecord({ 'ID PM': 'KS-2026-00002', 'ID KEGIATAN': 'KG-00009' })).toThrow('terdaftar');
+    expect(() => context.addSalurRecord({ 'ID PM': 'KS-2026-00002', 'ID KEGIATAN': 'KG-00001' })).toThrow('sudah selesai');
+  });
+
+  it('moves an old transaction into a kegiatan on edit and records who changed it', () => {
+    reset();
+    context.addKegiatan(kegiatanInput);
+    context.editSalurRow({ 'ID SALUR': 'TX-2026-00001', 'ID KEGIATAN': 'KG-00001', actor: 'ADMIN' });
+    expect(cell('SALUR', 1, 'PROGRAM')).toBe('Beasiswa');
+    expect(cell('SALUR', 1, 'DIUBAH OLEH')).toBe('ADMIN');
+    expect(() => context.editSalurRow({ 'ID SALUR': 'TX-2026-00001', 'ID KEGIATAN': '' })).toThrow('tidak bisa dilepas');
+  });
+
+  it('keeps a transaction editable after its kegiatan is finished', () => {
+    reset();
+    context.addKegiatan(kegiatanInput);
+    context.addSalurRecord({ 'ID PM': 'KS-2026-00002', 'ID KEGIATAN': 'KG-00001', actor: 'KSBL5' });
+    context.editKegiatan({ ...kegiatanInput, 'ID KEGIATAN': 'KG-00001', STATUS: 'Selesai' });
+    expect(() => context.editSalurRow({ 'ID SALUR': 'TX-2026-00002', 'JUMLAH PENERIMAAN': 300000, actor: 'KSBL5' })).not.toThrow();
+    expect(cell('SALUR', 2, 'JUMLAH PENERIMAAN')).toBe(300000);
+  });
+
+  it('blocks deleting or changing the program of a kegiatan that has transactions', () => {
+    reset();
+    context.addKegiatan(kegiatanInput);
+    context.addSalurRecord({ 'ID PM': 'KS-2026-00002', 'ID KEGIATAN': 'KG-00001', actor: 'KSBL5' });
+    expect(() => context.deleteKegiatan({ 'ID KEGIATAN': 'KG-00001' })).toThrow('masih punya 1 transaksi');
+    expect(() => context.editKegiatan({ ...kegiatanInput, 'ID KEGIATAN': 'KG-00001', PROGRAM: 'Sembako' })).toThrow('Program tidak bisa diganti');
+    context.addKegiatan({ ...kegiatanInput, 'NAMA KEGIATAN': 'Kosong' });
+    context.deleteKegiatan({ 'ID KEGIATAN': 'KG-00002' });
+    expect(sheets.KEGIATAN).toHaveLength(2);
+  });
+
+  it('lists kegiatan with realisasi and unique recipients', () => {
+    reset();
+    context.addKegiatan(kegiatanInput);
+    context.addSalurRecord({ 'ID PM': 'KS-2026-00002', 'ID KEGIATAN': 'KG-00001', 'JUMLAH PENERIMAAN': 200000, actor: 'A' });
+    context.addSalurRecord({ 'ID PM': 'KS-2026-00002', 'ID KEGIATAN': 'KG-00001', 'JUMLAH PENERIMAAN': 50000, actor: 'A' });
+    const [kegiatan] = context.listKegiatan(context.getSheetData('SALUR'));
+    expect(kegiatan.REALISASI).toBe(250000);
+    expect(kegiatan['JUMLAH PENERIMA']).toBe(1);
+  });
+
+  it('renames the program inside kegiatan and blocks deleting a program in use', () => {
+    reset();
+    context.addKegiatan(kegiatanInput);
+    context.editProgramRecord({ oldName: 'Beasiswa', newName: 'Beasiswa Pendidikan' });
+    expect(cell('KEGIATAN', 1, 'PROGRAM')).toBe('Beasiswa Pendidikan');
+    expect(() => context.deleteProgramRecord({ name: 'Beasiswa Pendidikan' })).toThrow('1 kegiatan');
+  });
+
+  it('sends date cells as plain text', () => {
+    // Date dibuat di dalam sandbox supaya instanceof Date cocok, seperti di Apps Script.
+    const format = iso => vm.runInContext(`formatCellValue(new Date('${iso}'))`, context);
+    expect(format('2026-11-05T00:00:00Z')).toBe('2026-11-05');
+    expect(format('2026-11-05T09:30:00Z')).toBe('2026-11-05 09:30');
+    expect(context.formatCellValue('teks')).toBe('teks');
+  });
+});
+
+describe('admin wilayah (hak admin daerah, cakupan seluruh daerah)', () => {
+  const USERS_HEADER = ['id', 'username', 'password', 'nama', 'role', 'daerah', 'status'];
+  const wilayah = { username: 'WIL1', role: 'admin_wilayah', daerah: '' };
+  const daerahMetro = { username: 'KSMT5', role: 'admin_daerah', daerah: 'Metro' };
+  const rows = [{ DAERAH: 'Metro' }, { DAERAH: 'Bandar Lampung' }];
+
+  const post = (session, action, data) => {
+    cache.clear();
+    sheets.Users = [USERS_HEADER, [1, session.username, 'x', '', session.role, session.daerah, 'aktif']];
+    const token = context.createSession(session);
+    const body = JSON.stringify({ api_key: 'KEY', session_token: token, action, data });
+    return context.handlePostRequest({ postData: { contents: body } });
+  };
+
+  it('sees every daerah while admin daerah sees only its own', () => {
+    expect(context.filterByDaerah(rows, wilayah)).toHaveLength(2);
+    expect(context.filterByDaerah(rows, daerahMetro)).toEqual([{ DAERAH: 'Metro' }]);
+  });
+
+  it('adds a PM in any daerah, while admin daerah is pinned to its own', () => {
+    sheets.MASTER_PM = [['ID PM', 'NAMA PM', 'NIK', 'NIK ALT', 'DAERAH']];
+    expect(post(wilayah, 'TAMBAH_MASTER', { 'NAMA PM': 'Andi', DAERAH: 'Bandar Lampung' }).success).toBe(true);
+    expect(post(daerahMetro, 'TAMBAH_MASTER', { 'NAMA PM': 'Cici', DAERAH: 'Bandar Lampung' }).success).toBe(true);
+    expect(sheets.MASTER_PM.slice(1).map(row => row[4])).toEqual(['Bandar Lampung', 'Metro']);
+  });
+
+  it('cannot delete or manage program, kegiatan, and accounts', () => {
+    for (const action of ['HAPUS_MASTER', 'HAPUS_PM_PROGRAM', 'TAMBAH_PROGRAM', 'TAMBAH_KEGIATAN', 'TAMBAH_AKUN']) {
+      expect(post(wilayah, action, { x: 1 }).code).toBe(403);
+    }
+  });
+
+  it('can be created by super admin without a daerah', () => {
+    sheets.Users = [['id', 'username', 'password', 'nama', 'role', 'daerah', 'status']];
+    context.handleUserAction('TAMBAH_AKUN', { actor: 'ADMIN', username: 'PANTAU', password: 'awal1234', role: 'admin_wilayah', daerah: 'Metro' });
+    expect(sheets.Users[1].slice(3)).toEqual(['', 'admin_wilayah', '', 'aktif']);
   });
 });

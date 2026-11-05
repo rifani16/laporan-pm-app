@@ -2,6 +2,7 @@ const SHEET_NAMES = {
   MASTER: 'MASTER_PM',
   SALUR: 'SALUR',
   REF: 'REF',
+  KEGIATAN: 'KEGIATAN',
   USERS: 'Users'
 };
 

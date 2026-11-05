@@ -62,7 +62,8 @@ function editProgramRecord(data) {
       .getRange(targetIndex + 2, context.programColumn + 1)
       .setValue(newName);
 
-    const updatedTransactions = replaceProgramInSalur(oldKey, newName);
+    const updatedTransactions = replaceProgramInSheet(SHEET_NAMES.SALUR, oldKey, newName);
+    replaceProgramInSheet(SHEET_NAMES.KEGIATAN, oldKey, newName);
     return { oldName, newName, updatedTransactions };
   } finally {
     lock.releaseLock();
@@ -81,9 +82,13 @@ function deleteProgramRecord(data) {
     );
     if (targetIndex === -1) throw new Error('Program tidak ditemukan');
 
-    const usageCount = countProgramUsage(nameKey);
+    const usageCount = countProgramUsage(SHEET_NAMES.SALUR, nameKey);
     if (usageCount > 0) {
       throw new Error(`Program masih digunakan oleh ${usageCount} transaksi`);
+    }
+    const kegiatanCount = countProgramUsage(SHEET_NAMES.KEGIATAN, nameKey);
+    if (kegiatanCount > 0) {
+      throw new Error(`Program masih digunakan oleh ${kegiatanCount} kegiatan`);
     }
 
     // Hanya kosongkan sel Program. Jangan hapus baris karena kolom REF lain
@@ -139,32 +144,30 @@ function getProgramSheetContext() {
   return { sheet, programColumn, lastRow, values };
 }
 
-function getSalurProgramContext() {
-  const sheet = SpreadsheetApp
-    .getActiveSpreadsheet()
-    .getSheetByName(SHEET_NAMES.SALUR);
-  if (!sheet) throw new Error(`Sheet ${SHEET_NAMES.SALUR} tidak ditemukan`);
-  if (sheet.getLastRow() < 2) return { sheet, range: null, values: [] };
+// Sheet KEGIATAN bisa belum ada; anggap tidak ada pemakaian.
+function getProgramColumnContext(sheetName) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+  if (!sheet || sheet.getLastRow() < 2) return { range: null, values: [] };
 
   const headers = sheet
     .getRange(1, 1, 1, sheet.getLastColumn())
     .getValues()[0];
   const programColumn = headers.indexOf('PROGRAM');
-  if (programColumn === -1) throw new Error('Kolom PROGRAM tidak ditemukan pada sheet SALUR');
+  if (programColumn === -1) throw new Error(`Kolom PROGRAM tidak ditemukan pada sheet ${sheetName}`);
 
   const range = sheet.getRange(2, programColumn + 1, sheet.getLastRow() - 1, 1);
-  return { sheet, range, values: range.getValues() };
+  return { range, values: range.getValues() };
 }
 
-function countProgramUsage(nameKey) {
-  const context = getSalurProgramContext();
+function countProgramUsage(sheetName, nameKey) {
+  const context = getProgramColumnContext(sheetName);
   return context.values.reduce((count, row) => (
     normalizeProgramName(row[0]) === nameKey ? count + 1 : count
   ), 0);
 }
 
-function replaceProgramInSalur(oldKey, newName) {
-  const context = getSalurProgramContext();
+function replaceProgramInSheet(sheetName, oldKey, newName) {
+  const context = getProgramColumnContext(sheetName);
   if (!context.range) return 0;
 
   let updated = 0;

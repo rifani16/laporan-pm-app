@@ -51,7 +51,10 @@ export function AuthProvider({ children }) {
   }, []);
 
   const isSuperAdmin = user?.role === 'super_admin';
-  const userDaerah = user?.daerah || '';
+  // Admin wilayah: hak seperti admin daerah, tapi cakupannya seluruh daerah.
+  const isAdminWilayah = user?.role === 'admin_wilayah';
+  const seesAllDaerah = isSuperAdmin || isAdminWilayah;
+  const userDaerah = seesAllDaerah ? '' : user?.daerah || '';
 
   return (
     <AuthContext.Provider
@@ -61,6 +64,8 @@ export function AuthProvider({ children }) {
         login,
         logout,
         isSuperAdmin,
+        isAdminWilayah,
+        seesAllDaerah,
         userDaerah
       }}
     >

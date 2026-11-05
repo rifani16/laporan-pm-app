@@ -6,7 +6,7 @@ import Dialog from '@/components/Common/Dialog';
 
 export default function EditModal({ item, onClose, onSave }) {
   const { refData } = useData();
-  const { isSuperAdmin } = useAuth();
+  const { seesAllDaerah } = useAuth();
   const { showToast } = useToast();
   const [form, setForm] = useState({
     'NAMA PM': item['NAMA PM'],
@@ -65,7 +65,7 @@ export default function EditModal({ item, onClose, onSave }) {
                   className="min-h-11 w-full rounded-lg border p-2 disabled:bg-gray-100 disabled:text-gray-600"
                   value={form[k]}
                   onChange={e => setForm({ ...form, [k]: e.target.value })}
-                  disabled={!isSuperAdmin}
+                  disabled={!seesAllDaerah}
                 >
                   <option value="">-- Pilih Daerah --</option>
                   {refData.daerah.map(d => <option key={d}>{d}</option>)}

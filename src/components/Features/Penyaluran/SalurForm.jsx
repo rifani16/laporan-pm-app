@@ -3,10 +3,11 @@ import { useData } from '@/hooks/useData';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 import { EMPTY_SALUR_FORM, getNamaOptions, toggleBentuk, buildSalurPayload } from './salurFields';
+import KegiatanSelect from './KegiatanSelect';
 
 export default function SalurForm() {
-  const { masterData, refData, createSalur } = useData();
-  const { isSuperAdmin, userDaerah } = useAuth();
+  const { masterData, kegiatanList, createSalur } = useData();
+  const { seesAllDaerah, userDaerah } = useAuth();
   const { showToast } = useToast();
   const [selectedPmId, setSelectedPmId] = useState('');
   const [namaPenerima, setNamaPenerima] = useState('');
@@ -16,18 +17,18 @@ export default function SalurForm() {
   const pmListId = useId();
 
   const scopedMasterData = useMemo(() => {
-    if (!isSuperAdmin && userDaerah) {
+    if (!seesAllDaerah && userDaerah) {
       return masterData.filter(pm => pm['DAERAH'] === userDaerah);
     }
     return masterData;
-  }, [masterData, isSuperAdmin, userDaerah]);
+  }, [masterData, seesAllDaerah, userDaerah]);
 
   const pmOptions = useMemo(() => {
     return scopedMasterData.map(pm => ({
       id: pm['ID PM'],
-      label: `${pm['ID PM']} - ${pm['NAMA PM']}${isSuperAdmin && pm['DAERAH'] ? ` (${pm['DAERAH']})` : ''}`
+      label: `${pm['ID PM']} - ${pm['NAMA PM']}${seesAllDaerah && pm['DAERAH'] ? ` (${pm['DAERAH']})` : ''}`
     }));
-  }, [scopedMasterData, isSuperAdmin]);
+  }, [scopedMasterData, seesAllDaerah]);
 
   const handleSearchChange = (e) => {
     const value = e.target.value;
@@ -106,19 +107,11 @@ export default function SalurForm() {
           </div>
         )}
 
-        <div>
-          <label htmlFor="program-salur" className="block text-sm font-medium">Program</label>
-          <select
-            id="program-salur"
-            className="min-h-11 w-full rounded-lg border bg-white p-2"
-            value={form.PROGRAM}
-            onChange={e => setForm({ ...form, PROGRAM: e.target.value })}
-            required
-          >
-            <option value="">Pilih Program</option>
-            {refData.program.map(p => <option key={p}>{p}</option>)}
-          </select>
-        </div>
+        <KegiatanSelect
+          kegiatanList={kegiatanList}
+          value={form.ID_KEGIATAN}
+          onChange={id => setForm({ ...form, ID_KEGIATAN: id })}
+        />
 
         <div>
           <label className="block text-sm font-medium">Bentuk Penerimaan</label>

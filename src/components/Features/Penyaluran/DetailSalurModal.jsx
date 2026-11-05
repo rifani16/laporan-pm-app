@@ -1,4 +1,7 @@
 import Dialog from '../../Common/Dialog';
+import { formatRupiah, formatTanggal } from '../../../services/kegiatan';
+
+const jejak = (oleh, pada) => (oleh ? `${oleh}${pada ? `, ${pada}` : ''}` : '-');
 
 export default function DetailSalurModal({ data, masterData, onClose }) {
   if (!data) return null;
@@ -9,13 +12,6 @@ export default function DetailSalurModal({ data, masterData, onClose }) {
   const namaPenerimaTransaksi = data['NAMA PENERIMA'] || data['NAMA PM'] || ''; // fallback
 
   const isAlternatif = namaPenerimaTransaksi === namaAlternatif && namaAlternatif !== '';
-
-  const formatRupiah = (value) => {
-    if (value == null) return 'Rp 0';
-    const num = Number(value);
-    if (isNaN(num)) return 'Rp 0';
-    return `Rp ${num.toLocaleString('id-ID')}`;
-  };
 
   return (
     <Dialog title="Detail Transaksi" onClose={onClose} maxWidth="max-w-lg">
@@ -32,10 +28,13 @@ export default function DetailSalurModal({ data, masterData, onClose }) {
           <div><label className="block text-sm font-medium text-gray-500">NIK Penerima</label><p className="text-gray-800">{data['NIK PENERIMA'] || data['NIK'] || '-'}</p></div>
           <div><label className="block text-sm font-medium text-gray-500">Daerah</label><p className="text-gray-800">{data['DAERAH'] || '-'}</p></div>
           <div><label className="block text-sm font-medium text-gray-500">Alamat</label><p className="text-gray-800">{data['ALAMAT'] || '-'}</p></div>
+          <div><label className="block text-sm font-medium text-gray-500">Kegiatan</label><p className="text-gray-800">{data.NAMA_KEGIATAN ? `${data.NAMA_KEGIATAN} (${formatTanggal(data.TANGGAL)})` : 'Tanpa kegiatan'}</p></div>
           <div><label className="block text-sm font-medium text-gray-500">Program</label><p className="text-gray-800">{data['PROGRAM'] || '-'}</p></div>
           <div><label className="block text-sm font-medium text-gray-500">Bentuk Penerimaan</label><p className="text-gray-800">{data['BENTUK PENERIMAAN'] || '-'}</p></div>
           <div><label className="block text-sm font-medium text-gray-500">Jumlah Penerimaan</label><p className="text-gray-800">{formatRupiah(data['JUMLAH PENERIMAAN'])}</p></div>
           <div><label className="block text-sm font-medium text-gray-500">Keterangan</label><p className="text-gray-800">{data['KETERANGAN'] || '-'}</p></div>
+          <div><label className="block text-sm font-medium text-gray-500">Diinput</label><p className="text-gray-800">{jejak(data['DIINPUT OLEH'], data['DIINPUT PADA'])}</p></div>
+          <div><label className="block text-sm font-medium text-gray-500">Terakhir diubah</label><p className="text-gray-800">{jejak(data['DIUBAH OLEH'], data['DIUBAH PADA'])}</p></div>
         </div>
         <div className="flex justify-end mt-4">
           <button onClick={onClose} className="min-h-11 px-4 py-2 bg-teal-600 text-white rounded-lg">Tutup</button>

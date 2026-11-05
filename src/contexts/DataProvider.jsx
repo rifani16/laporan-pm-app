@@ -28,6 +28,9 @@ export const DataProvider = ({ children }) => {
       createProgram: withRefresh(api.addProgram),
       updateProgram: withRefresh(api.editProgram),
       deleteProgram: withRefresh(api.deleteProgram),
+      createKegiatan: withRefresh(api.addKegiatan),
+      updateKegiatan: withRefresh(api.editKegiatan),
+      deleteKegiatan: withRefresh(api.deleteKegiatan),
       createUser: withRefresh(api.addUser),
       updateUser: withRefresh(api.editUser),
       updateUserStatus: withRefresh(api.setUserStatus),
@@ -39,17 +42,19 @@ export const DataProvider = ({ children }) => {
   const salurData = data?.salur || EMPTY_LIST;
   const refData = data?.ref || EMPTY_REF_DATA;
   const users = data?.users || EMPTY_LIST;
+  const kegiatanList = data?.kegiatan || EMPTY_LIST;
 
   const contextValue = useMemo(() => ({
     masterData,
     salurData,
     refData,
     users,
+    kegiatanList,
     loaded: data != null,
     loading,
     error,
     ...actions
-  }), [masterData, salurData, refData, users, data, loading, error, actions]);
+  }), [masterData, salurData, refData, users, kegiatanList, data, loading, error, actions]);
 
   return (
     <DataContext.Provider value={contextValue}>

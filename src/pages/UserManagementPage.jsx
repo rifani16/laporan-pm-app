@@ -6,7 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
 
 const MIN_PASSWORD_LENGTH = 6;
-const ROLE_LABELS = { super_admin: 'Super Admin', admin_daerah: 'Admin Daerah' };
+const ROLE_LABELS = { super_admin: 'Super Admin', admin_wilayah: 'Admin Wilayah', admin_daerah: 'Admin Daerah' };
 const inputClass = 'mt-1 min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-200 disabled:bg-gray-100 disabled:text-gray-600';
 
 function DialogActions({ saving, submitLabel, onClose }) {
@@ -47,6 +47,7 @@ function UserFormDialog({ user, isSelf, daerahOptions, saving, onSubmit, onClose
           Role
           <select value={form.role} onChange={change('role')} disabled={isSelf || saving} className={inputClass}>
             <option value="admin_daerah">Admin Daerah</option>
+            <option value="admin_wilayah">Admin Wilayah (semua daerah)</option>
             <option value="super_admin">Super Admin</option>
           </select>
           {isSelf && <span className="mt-1 block text-xs font-normal text-gray-600">Role akun sendiri tidak bisa diubah.</span>}

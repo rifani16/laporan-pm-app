@@ -6,7 +6,7 @@ import Dialog from '@/components/Common/Dialog';
 
 export default function TambahPmModal({ onClose }) {
   const { refData, createMaster } = useData();
-  const { isSuperAdmin, userDaerah } = useAuth();
+  const { seesAllDaerah, userDaerah } = useAuth();
   const { showToast } = useToast();
 
   const [form, setForm] = useState({
@@ -16,7 +16,7 @@ export default function TambahPmModal({ onClose }) {
     'NIK ALT': '',
     'NO KK': '',
     'ALAMAT': '',
-    'DAERAH': !isSuperAdmin && userDaerah ? userDaerah : '',
+    'DAERAH': !seesAllDaerah && userDaerah ? userDaerah : '',
     'NO HP': '',
     'ASNAF': '',
     'PEKERJAAN': '',
@@ -48,7 +48,7 @@ export default function TambahPmModal({ onClose }) {
     try {
       const payload = {
         ...form,
-        DAERAH: !isSuperAdmin && userDaerah ? userDaerah : form['DAERAH']
+        DAERAH: !seesAllDaerah && userDaerah ? userDaerah : form['DAERAH']
       };
       const result = await createMaster(payload);
       if (result.success) {
@@ -115,7 +115,7 @@ export default function TambahPmModal({ onClose }) {
               className="min-h-11 w-full rounded-lg border p-2 disabled:bg-gray-100 disabled:text-gray-600"
               value={form['DAERAH']}
               onChange={e => handleChange('DAERAH', e.target.value)}
-              disabled={!isSuperAdmin}
+              disabled={!seesAllDaerah}
             >
               <option value="">-- Pilih Daerah --</option>
               {refData.daerah.map(d => <option key={d}>{d}</option>)}

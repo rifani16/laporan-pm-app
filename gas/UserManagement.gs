@@ -1,4 +1,4 @@
-const USER_ROLES = ['super_admin', 'admin_daerah'];
+const USER_ROLES = ['super_admin', 'admin_wilayah', 'admin_daerah'];
 const USERNAME_FORMAT = /^[A-Za-z0-9_.-]{3,30}$/;
 
 function handleUserAction(action, data) {
@@ -52,7 +52,8 @@ function isSameUser(user, username) {
 function validateUserProfile(data) {
   const role = String(data.role || '');
   if (!USER_ROLES.includes(role)) throw new Error('Role tidak valid');
-  const daerah = role === 'super_admin' ? '' : String(data.daerah || '').trim();
+  // Hanya admin daerah yang terikat satu daerah; super admin dan admin wilayah lintas daerah.
+  const daerah = role === 'admin_daerah' ? String(data.daerah || '').trim() : '';
   if (role === 'admin_daerah' && !getRefData().daerah.map(String).includes(daerah)) {
     throw new Error('Pilih daerah yang terdaftar');
   }

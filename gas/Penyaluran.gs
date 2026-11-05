@@ -20,9 +20,11 @@ function handlePenyaluranAction(action, data) {
   return null;
 }
 
+const SALUR_EXTRA_COLUMNS = ['ID KEGIATAN', 'DIINPUT OLEH', 'DIINPUT PADA', 'DIUBAH OLEH', 'DIUBAH PADA'];
+
 function validateSalurData(data, isNew = true) {
   if (isNew && !data['ID PM']) throw new Error('ID PM wajib diisi');
-  if (isNew && !data['PROGRAM']) throw new Error('PROGRAM wajib diisi');
+  if (isNew && !data['ID KEGIATAN']) throw new Error('Pilih kegiatan penyaluran');
   if (data['NIK PENERIMA'] && !/^\d{16}$/.test(String(data['NIK PENERIMA']))) {
     throw new Error('NIK PENERIMA harus 16 digit angka');
   }
@@ -40,8 +42,9 @@ function addSalurRecord(data) {
   }
 
   try {
+    const kegiatan = requireOpenKegiatan(data['ID KEGIATAN']);
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAMES.SALUR);
-    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const headers = ensureColumns(sheet, SALUR_EXTRA_COLUMNS);
     let lastIdNumber = 0;
     const lastRow = sheet.getLastRow();
 
@@ -55,10 +58,17 @@ function addSalurRecord(data) {
     }
 
     const newId = `TX-2026-${(lastIdNumber + 1).toString().padStart(5, '0')}`;
-    const newRow = headers.map(header => {
-      if (header === 'ID SALUR') return newId;
-      return data[header] !== undefined ? data[header] : '';
-    });
+    const record = {
+      ...data,
+      'ID SALUR': newId,
+      'ID KEGIATAN': kegiatan['ID KEGIATAN'],
+      PROGRAM: kegiatan.PROGRAM,
+      'DIINPUT OLEH': data.actor,
+      'DIINPUT PADA': new Date(),
+      'DIUBAH OLEH': '',
+      'DIUBAH PADA': ''
+    };
+    const newRow = headers.map(header => record[header] ?? '');
 
     sheet.appendRow(newRow);
     return newId;
@@ -74,7 +84,7 @@ function editSalurRecord(data) {
 
 function editSalurRow(data) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAMES.SALUR);
-  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const headers = ensureColumns(sheet, SALUR_EXTRA_COLUMNS);
   const idColumn = headers.indexOf('ID SALUR');
   if (idColumn === -1) throw new Error('Kolom ID SALUR tidak ditemukan');
 
@@ -92,24 +102,36 @@ function editSalurRow(data) {
 
   const rowRange = sheet.getRange(targetRow, 1, 1, sheet.getLastColumn());
   const rowValues = rowRange.getValues()[0];
-  // ID PM sengaja tidak bisa diubah: transaksi tidak boleh dipindah ke PM lain.
-  const fieldMapping = {
-    'NAMA PENERIMA': 'NAMA PENERIMA',
-    'NIK PENERIMA': 'NIK PENERIMA',
-    'DAERAH': 'DAERAH',
-    'PROGRAM': 'PROGRAM',
-    'JUMLAH PENERIMAAN': 'JUMLAH PENERIMAAN',
-    'BENTUK PENERIMAAN': 'BENTUK PENERIMAAN',
-    'KETERANGAN': 'KETERANGAN'
-  };
+  const col = header => headers.indexOf(header);
 
-  for (const [field, headerName] of Object.entries(fieldMapping)) {
-    const columnIndex = headers.indexOf(headerName);
-    if (columnIndex !== -1 && data[field] !== undefined) {
-      let value = data[field];
-      if (field === 'JUMLAH PENERIMAAN') value = Number(value) || 0;
-      rowValues[columnIndex] = value;
-    }
+  // Program mengikuti kegiatan. Pindah kegiatan hanya ke kegiatan yang belum Selesai,
+  // dan transaksi yang sudah masuk kegiatan tidak bisa dilepas lagi.
+  const currentKegiatan = String(rowValues[col('ID KEGIATAN')] || '').trim();
+  const nextKegiatan = data['ID KEGIATAN'] !== undefined ? String(data['ID KEGIATAN']).trim() : currentKegiatan;
+  if (currentKegiatan && !nextKegiatan) {
+    throw new Error('Transaksi yang sudah masuk kegiatan tidak bisa dilepas dari kegiatan');
+  }
+  let program = data.PROGRAM;
+  if (nextKegiatan) {
+    const found = nextKegiatan === currentKegiatan ? findKegiatan(nextKegiatan) : null;
+    program = (found ? found.record : requireOpenKegiatan(nextKegiatan)).PROGRAM;
+  }
+
+  // ID PM sengaja tidak bisa diubah: transaksi tidak boleh dipindah ke PM lain.
+  const values = {
+    'NAMA PENERIMA': data['NAMA PENERIMA'],
+    'NIK PENERIMA': data['NIK PENERIMA'],
+    'DAERAH': data['DAERAH'],
+    'PROGRAM': program,
+    'JUMLAH PENERIMAAN': data['JUMLAH PENERIMAAN'] !== undefined ? Number(data['JUMLAH PENERIMAAN']) || 0 : undefined,
+    'BENTUK PENERIMAAN': data['BENTUK PENERIMAAN'],
+    'KETERANGAN': data['KETERANGAN'],
+    'ID KEGIATAN': nextKegiatan,
+    'DIUBAH OLEH': data.actor,
+    'DIUBAH PADA': new Date()
+  };
+  for (const [header, value] of Object.entries(values)) {
+    if (col(header) !== -1 && value !== undefined) rowValues[col(header)] = value;
   }
 
   rowRange.setValues([rowValues]);

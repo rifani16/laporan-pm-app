@@ -70,6 +70,13 @@ export const editProgram = (oldName, newName) =>
 
 export const deleteProgram = (name) => post("HAPUS_PROGRAM", { name });
 
+export const addKegiatan = (kegiatan) => post("TAMBAH_KEGIATAN", kegiatan);
+
+export const editKegiatan = (kegiatan) => post("EDIT_KEGIATAN", kegiatan);
+
+export const deleteKegiatan = (idKegiatan) =>
+  post("HAPUS_KEGIATAN", { "ID KEGIATAN": idKegiatan });
+
 export const addUser = (user) => post("TAMBAH_AKUN", user);
 
 export const editUser = (user) => post("EDIT_AKUN", user);

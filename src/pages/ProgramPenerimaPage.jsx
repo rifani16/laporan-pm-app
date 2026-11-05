@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useData } from '../hooks/useData';
 import { useAuth } from '../hooks/useAuth';
 import Pagination from '../components/Common/Pagination';
@@ -8,9 +8,14 @@ import EditSalurModal from '../components/Features/Penyaluran/EditSalurModal';
 import ConfirmDialog from '../components/Common/ConfirmDialog';
 import { useToast } from '../hooks/useToast';
 import ExportExcelButton from '../components/Common/ExportExcelButton';
+import DateRangeFilter from '../components/Common/DateRangeFilter';
+import { formatTanggal, inDateRange, indexKegiatan } from '../services/kegiatan';
 
 const EXPORT_COLUMNS = [
   { header: 'ID Salur', value: s => s['ID SALUR'], width: 16 },
+  { header: 'Tanggal', value: s => s.TANGGAL, width: 12 },
+  { header: 'ID Kegiatan', value: s => s['ID KEGIATAN'], width: 12 },
+  { header: 'Kegiatan', value: s => s.NAMA_KEGIATAN, width: 30 },
   { header: 'ID PM', value: s => s['ID PM'], width: 16 },
   { header: 'Nama Penerima', value: s => s['NAMA PENERIMA'], width: 28 },
   { header: 'NIK Penerima', value: s => s['NIK PENERIMA'], width: 20 },
@@ -20,15 +25,22 @@ const EXPORT_COLUMNS = [
   { header: 'Program', value: s => s['PROGRAM'], width: 22 },
   { header: 'Bentuk Penerimaan', value: s => s['BENTUK PENERIMAAN'], width: 18 },
   { header: 'Jumlah Penerimaan (Rp)', value: s => s['JUMLAH PENERIMAAN'], number: true, width: 20 },
-  { header: 'Keterangan', value: s => s['KETERANGAN'], width: 30 }
+  { header: 'Keterangan', value: s => s['KETERANGAN'], width: 30 },
+  { header: 'Diinput Oleh', value: s => s['DIINPUT OLEH'], width: 14 },
+  { header: 'Diinput Pada', value: s => s['DIINPUT PADA'], width: 17 },
+  { header: 'Diubah Oleh', value: s => s['DIUBAH OLEH'], width: 14 },
+  { header: 'Diubah Pada', value: s => s['DIUBAH PADA'], width: 17 }
 ];
 
 export default function ProgramPenerimaPage() {
-  const { salurData, masterData, refData, updateSalur, deleteSalur } = useData();
-  const { isSuperAdmin, userDaerah } = useAuth();
+  const { salurData, masterData, refData, kegiatanList, updateSalur, deleteSalur } = useData();
+  const [searchParams] = useSearchParams();
+  const { isSuperAdmin, seesAllDaerah, userDaerah } = useAuth();
   const { showToast } = useToast();
   const [filterProgram, setFilterProgram] = useState('semua');
   const [filterDaerah, setFilterDaerah] = useState('semua');
+  const [filterKegiatan, setFilterKegiatan] = useState(() => searchParams.get('kegiatan') || 'semua');
+  const [periode, setPeriode] = useState({ dari: '', sampai: '' });
   const [searchNama, setSearchNama] = useState('');
   const [displayMode, setDisplayMode] = useState('penerima'); // 'penerima' | 'pm_utama'
   const [currentPage, setCurrentPage] = useState(1);
@@ -38,37 +50,45 @@ export default function ProgramPenerimaPage() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
 
-  const activeFilterDaerah = !isSuperAdmin && userDaerah ? userDaerah : filterDaerah;
+  const activeFilterDaerah = !seesAllDaerah && userDaerah ? userDaerah : filterDaerah;
 
   const masterById = useMemo(
     () => new Map(masterData.map(master => [master['ID PM'], master])),
     [masterData]
   );
 
+  const kegiatanById = useMemo(() => indexKegiatan(kegiatanList), [kegiatanList]);
+
   const enrichedSalur = useMemo(() => {
     return salurData.map(s => {
       const master = masterById.get(s['ID PM']);
+      const kegiatan = kegiatanById.get(String(s['ID KEGIATAN'] || ''));
       return {
         ...s,
+        NAMA_KEGIATAN: kegiatan ? kegiatan['NAMA KEGIATAN'] : '',
+        TANGGAL: kegiatan ? kegiatan.TANGGAL : '',
         NAMA_PM_UTAMA: master ? master['NAMA PM'] : '',
         DAERAH: s['DAERAH'] || (master ? master['DAERAH'] : ''),
         ALAMAT: s['ALAMAT'] || (master ? master['ALAMAT'] : '')
       };
     });
-  }, [salurData, masterById]);
+  }, [salurData, masterById, kegiatanById]);
 
   const filteredData = useMemo(() => {
     const normalizedSearch = searchNama.trim().toLowerCase();
     return enrichedSalur.filter(item => {
       const matchProgram = filterProgram === 'semua' || item['PROGRAM'] === filterProgram;
+      const matchKegiatan = filterKegiatan === 'semua'
+        || (filterKegiatan === 'tanpa' ? !item['ID KEGIATAN'] : String(item['ID KEGIATAN']) === filterKegiatan);
+      const matchTanggal = inDateRange(item.TANGGAL, periode.dari, periode.sampai);
       const matchDaerah = activeFilterDaerah === 'semua' || item['DAERAH'] === activeFilterDaerah;
       const namaPenerima = String(item['NAMA PENERIMA'] || '');
       const matchNama = !normalizedSearch ||
         item.NAMA_PM_UTAMA.toLowerCase().includes(normalizedSearch) ||
         namaPenerima.toLowerCase().includes(normalizedSearch);
-      return matchProgram && matchDaerah && matchNama;
+      return matchProgram && matchKegiatan && matchTanggal && matchDaerah && matchNama;
     });
-  }, [enrichedSalur, filterProgram, activeFilterDaerah, searchNama]);
+  }, [enrichedSalur, filterProgram, filterKegiatan, periode, activeFilterDaerah, searchNama]);
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
@@ -99,10 +119,14 @@ export default function ProgramPenerimaPage() {
     }
   };
 
-  const hasActiveFilter = filterProgram !== 'semua' || (isSuperAdmin && activeFilterDaerah !== 'semua') || Boolean(searchNama);
+  const hasPeriode = Boolean(periode.dari || periode.sampai);
+  const hasActiveFilter = filterProgram !== 'semua' || filterKegiatan !== 'semua' || hasPeriode
+    || (seesAllDaerah && activeFilterDaerah !== 'semua') || Boolean(searchNama);
 
   const resetFilters = () => {
     setFilterProgram('semua');
+    setFilterKegiatan('semua');
+    setPeriode({ dari: '', sampai: '' });
     setFilterDaerah('semua');
     setSearchNama('');
     setDisplayMode('penerima');
@@ -110,7 +134,7 @@ export default function ProgramPenerimaPage() {
   };
 
   const programList = ['semua', ...(refData.program || [])];
-  const daerahList = isSuperAdmin
+  const daerahList = seesAllDaerah
     ? ['semua', ...(refData.daerah || [])]
     : [userDaerah || 'semua'];
 
@@ -125,6 +149,17 @@ export default function ProgramPenerimaPage() {
             {programList.map(p => <option key={p} value={p}>{p === 'semua' ? 'Semua Program' : p}</option>)}
           </select>
         </div>
+        <div className="flex-[1.25] min-w-48">
+          <label htmlFor="filter-kegiatan" className="block text-sm font-medium">Kegiatan</label>
+          <select id="filter-kegiatan" className="min-h-11 w-full rounded-lg border bg-white px-3 py-2 text-sm" value={filterKegiatan} onChange={e => handleFilterChange(setFilterKegiatan, e.target.value)}>
+            <option value="semua">Semua Kegiatan</option>
+            <option value="tanpa">Tanpa kegiatan (data lama)</option>
+            {[...kegiatanList]
+              .sort((a, b) => String(b.TANGGAL).localeCompare(String(a.TANGGAL)))
+              .map(k => <option key={k['ID KEGIATAN']} value={k['ID KEGIATAN']}>{formatTanggal(k.TANGGAL)} · {k['NAMA KEGIATAN']}</option>)}
+          </select>
+        </div>
+        <DateRangeFilter dari={periode.dari} sampai={periode.sampai} onChange={value => handleFilterChange(setPeriode, value)} />
         <div className="flex-1 min-w-40">
           <label htmlFor="filter-daerah" className="block text-sm font-medium">Daerah</label>
           <select
@@ -132,7 +167,7 @@ export default function ProgramPenerimaPage() {
             className="min-h-11 w-full rounded-lg border bg-white px-3 py-2 text-sm disabled:bg-gray-100 disabled:text-gray-600"
             value={activeFilterDaerah}
             onChange={e => handleFilterChange(setFilterDaerah, e.target.value)}
-            disabled={!isSuperAdmin}
+            disabled={!seesAllDaerah}
           >
             {daerahList.map(d => <option key={d} value={d}>{d === 'semua' ? 'Semua Daerah' : d}</option>)}
           </select>
@@ -166,6 +201,7 @@ export default function ProgramPenerimaPage() {
         <div className="flex w-full flex-wrap items-center justify-between gap-2">
           <p className="text-sm text-gray-600" aria-live="polite">
             Menampilkan {filteredData.length} dari {enrichedSalur.length} transaksi
+            {hasPeriode && '. Transaksi tanpa kegiatan tidak ikut saat filter tanggal dipakai.'}
           </p>
           <ExportExcelButton
             fileName={filterProgram === 'semua' ? 'penyaluran' : `penyaluran-${filterProgram}`}
@@ -184,6 +220,7 @@ export default function ProgramPenerimaPage() {
                 <th className="p-2 text-left">
                   {displayMode === 'pm_utama' ? 'Nama PM Utama' : 'Penerima Penyaluran'}
                 </th>
+                <th className="p-2 text-left">Kegiatan</th>
                 <th className="p-2 text-left">Daerah</th>
                 <th className="p-2 text-left">Program</th>
                 <th className="p-2 text-right">Jumlah Penerimaan</th>
@@ -209,6 +246,14 @@ export default function ProgramPenerimaPage() {
                       {subName && (
                         <p className="text-xs text-gray-500">{subName}</p>
                       )}
+                    </td>
+                    <td className="p-2">
+                      {item.NAMA_KEGIATAN ? (
+                        <>
+                          <p>{item.NAMA_KEGIATAN}</p>
+                          <p className="text-xs text-gray-500">{formatTanggal(item.TANGGAL)}</p>
+                        </>
+                      ) : <span className="text-gray-500">Tanpa kegiatan</span>}
                     </td>
                     <td className="p-2">{item.DAERAH || '-'}</td>
                     <td className="p-2">{item['PROGRAM']}</td>

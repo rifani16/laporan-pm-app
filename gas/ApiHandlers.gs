@@ -1,8 +1,12 @@
 const USER_ACTIONS = ['TAMBAH_AKUN', 'EDIT_AKUN', 'STATUS_AKUN', 'RESET_PASSWORD_AKUN'];
+const KEGIATAN_ACTIONS = ['TAMBAH_KEGIATAN', 'EDIT_KEGIATAN', 'HAPUS_KEGIATAN'];
+// Aksi yang mencatat username pelaku (jejak input atau perlindungan akun sendiri).
+const ACTOR_ACTIONS = [...USER_ACTIONS, 'TAMBAH_SALUR', 'EDIT_SALUR'];
 const SUPER_ADMIN_ONLY_ACTIONS = [
   'HAPUS_MASTER', 'HAPUS_PM_PROGRAM',
   'TAMBAH_PROGRAM', 'EDIT_PROGRAM', 'HAPUS_PROGRAM',
-  ...USER_ACTIONS
+  ...USER_ACTIONS,
+  ...KEGIATAN_ACTIONS
 ];
 const DAERAH_SCOPED_ACTIONS = ['TAMBAH_MASTER', 'EDIT_MASTER', 'TAMBAH_SALUR', 'EDIT_SALUR'];
 
@@ -10,8 +14,13 @@ function isSuperAdmin(session) {
   return session.role === 'super_admin';
 }
 
+// Admin wilayah punya hak yang sama dengan admin daerah, tapi cakupannya seluruh daerah (provinsi).
+function seesAllDaerah(session) {
+  return isSuperAdmin(session) || session.role === 'admin_wilayah';
+}
+
 function filterByDaerah(rows, session) {
-  if (isSuperAdmin(session)) return rows;
+  if (seesAllDaerah(session)) return rows;
   const daerah = String(session.daerah || '').trim();
   if (!daerah) return [];
   return rows.filter(row => String(row['DAERAH'] || '').trim() === daerah);
@@ -35,9 +44,11 @@ function handleGetRequest(e) {
     const session = getActiveSession(params.token);
     if (!session) return errorResponse('Sesi berakhir, silakan login ulang', 401);
 
+    const salur = getSheetData(SHEET_NAMES.SALUR);
     return dataResponse({
       master: filterByDaerah(getMasterWithAggregates(), session),
-      salur: filterByDaerah(getSheetData(SHEET_NAMES.SALUR), session),
+      salur: filterByDaerah(salur, session),
+      kegiatan: listKegiatan(salur),
       ref: getRefData(),
       users: isSuperAdmin(session) ? listUsers() : []
     });
@@ -71,9 +82,9 @@ function handlePostRequest(e) {
       sanitizedData.username = session.username;
       sanitizedData.session_token = body.session_token;
     }
-    if (USER_ACTIONS.includes(action)) sanitizedData.actor = session.username;
+    if (ACTOR_ACTIONS.includes(action)) sanitizedData.actor = session.username;
 
-    if (!isSuperAdmin(session) && DAERAH_SCOPED_ACTIONS.includes(action)) {
+    if (!seesAllDaerah(session) && DAERAH_SCOPED_ACTIONS.includes(action)) {
       if (!session.daerah) return errorResponse('Akun belum memiliki daerah', 403);
       if (action === 'EDIT_MASTER') {
         assertRowInDaerah(SHEET_NAMES.MASTER, 'ID PM', sanitizedData['ID PM'], session);
@@ -92,7 +103,8 @@ function handlePostRequest(e) {
       handleMasterAction,
       handlePenyaluranAction,
       handleProgramAction,
-      handleUserAction
+      handleUserAction,
+      handleKegiatanAction
     ];
 
     for (const handler of featureHandlers) {

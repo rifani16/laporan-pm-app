@@ -3,15 +3,19 @@ import { useData } from '../../../hooks/useData';
 import { useToast } from '../../../hooks/useToast';
 import Dialog from '../../Common/Dialog';
 import { getNamaOptions, toggleBentuk, buildSalurPayload } from './salurFields';
+import KegiatanSelect from './KegiatanSelect';
 
 export default function EditSalurModal({ data, onClose, onSave }) {
-  const { masterData, refData } = useData();
+  const { masterData, refData, kegiatanList } = useData();
   const { showToast } = useToast();
   const fixedPmId = data['ID PM'];
   const bentuk = data['BENTUK PENERIMAAN'] || '';
+  // Transaksi lama boleh tetap tanpa kegiatan; yang sudah masuk kegiatan tidak bisa dilepas.
+  const isLegacy = !data['ID KEGIATAN'];
 
   const [namaPenerima, setNamaPenerima] = useState(data['NAMA PENERIMA'] || data['NAMA PM'] || '');
   const [form, setForm] = useState({
+    ID_KEGIATAN: data['ID KEGIATAN'] ? String(data['ID KEGIATAN']) : '',
     PROGRAM: data['PROGRAM'] || '',
     BENTUK_PENERIMAAN: { uang: bentuk.includes('Uang'), barang: bentuk.includes('Barang') },
     JUMLAH_PENERIMAAN: data['JUMLAH PENERIMAAN'] ?? '',
@@ -56,13 +60,21 @@ export default function EditSalurModal({ data, onClose, onSave }) {
               {namaOptions.map(o => <option key={o.label} value={o.label}>{o.label}</option>)}
             </select>
           </div>
-          <div>
-            <label htmlFor="edit-salur-program" className="block text-sm font-medium">Program</label>
-            <select id="edit-salur-program" className="min-h-11 w-full rounded-lg border p-2" value={form.PROGRAM} onChange={e => setForm({...form, PROGRAM: e.target.value})}>
-              <option value="">-- Pilih Program --</option>
-              {refData.program.map(p => <option key={p}>{p}</option>)}
-            </select>
-          </div>
+          <KegiatanSelect
+            kegiatanList={kegiatanList}
+            value={form.ID_KEGIATAN}
+            onChange={id => setForm({ ...form, ID_KEGIATAN: id })}
+            allowNone={isLegacy}
+          />
+          {isLegacy && !form.ID_KEGIATAN && (
+            <div>
+              <label htmlFor="edit-salur-program" className="block text-sm font-medium">Program</label>
+              <select id="edit-salur-program" className="min-h-11 w-full rounded-lg border p-2" value={form.PROGRAM} onChange={e => setForm({...form, PROGRAM: e.target.value})}>
+                <option value="">-- Pilih Program --</option>
+                {refData.program.map(p => <option key={p}>{p}</option>)}
+              </select>
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium">Bentuk Penerimaan</label>
             <div className="flex gap-4 mt-1">
