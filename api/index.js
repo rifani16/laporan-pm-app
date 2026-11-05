@@ -15,10 +15,23 @@ function getAllowedOrigins() {
   return fromEnv.length ? fromEnv : DEFAULT_ALLOWED_ORIGINS;
 }
 
+// Same-origin: halaman dan /api dilayani dari domain yang sama (mis. custom domain).
+function isSameHost(origin, host) {
+  try {
+    return !!host && new URL(origin).host === host;
+  } catch {
+    return false;
+  }
+}
+
 export default async function handler(req, res) {
   // 1. Validasi origin (CORS). POST wajib punya origin yang diizinkan.
   const origin = req.headers.origin;
-  const originAllowed = !!origin && getAllowedOrigins().includes(origin);
+  const originAllowed = !!origin
+    && (getAllowedOrigins().includes(origin) || isSameHost(origin, req.headers.host));
+  if (origin && !originAllowed) {
+    console.warn('Rejected origin:', origin, 'host:', req.headers.host);
+  }
   if (originAllowed) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Vary', 'Origin');

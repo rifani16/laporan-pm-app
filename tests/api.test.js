@@ -119,6 +119,19 @@ describe('api proxy', () => {
     expect(res.statusCode).toBe(504);
   });
 
+  it('allows a same-host origin such as a custom domain', async () => {
+    const res = makeRes();
+    await handler(makeReq({ headers: { origin: 'https://pm.example.com', host: 'pm.example.com' } }), res);
+    expect(res.statusCode).toBe(200);
+    expect(fetch).toHaveBeenCalled();
+  });
+
+  it('rejects a cross-site origin even when host is set', async () => {
+    const res = makeRes();
+    await handler(makeReq({ headers: { origin: 'https://evil.example', host: 'pm.example.com' } }), res);
+    expect(res.statusCode).toBe(403);
+  });
+
   it('honors ALLOWED_ORIGINS from env', async () => {
     process.env.ALLOWED_ORIGINS = 'https://other.example';
     const res = makeRes();
