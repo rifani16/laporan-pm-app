@@ -18,26 +18,36 @@ const CacheService = {
     remove: k => cache.delete(k)
   })
 };
-let usersSheet = [];
-const SpreadsheetApp = {
-  getActiveSpreadsheet: () => ({
-    getSheetByName: () => ({
-      getDataRange: () => ({ getValues: () => usersSheet.map(row => [...row]) }),
-      getRange: (row, column) => ({ setValue: v => { usersSheet[row - 1][column - 1] = v; } }),
-      appendRow: row => usersSheet.push(row)
-    })
-  })
+// Stub sheet: tiap sheet berupa array baris (baris 0 = header), indeks 1-based seperti Apps Script.
+const sheets = { Users: [], MASTER_PM: [] };
+const makeSheet = (name) => {
+  const rows = () => sheets[name];
+  return {
+    getDataRange: () => ({ getValues: () => rows().map(row => [...row]) }),
+    getLastRow: () => rows().length,
+    getLastColumn: () => rows()[0].length,
+    getRange: (row, column, numRows = 1, numColumns = 1) => ({
+      getValues: () => rows().slice(row - 1, row - 1 + numRows).map(r => r.slice(column - 1, column - 1 + numColumns)),
+      setValue: v => { rows()[row - 1][column - 1] = v; },
+      setValues: values => values.forEach((r, i) => r.forEach((v, j) => { rows()[row - 1 + i][column - 1 + j] = v; }))
+    }),
+    appendRow: row => rows().push(row)
+  };
 };
+const SpreadsheetApp = {
+  getActiveSpreadsheet: () => ({ getSheetByName: name => (sheets[name] ? makeSheet(name) : null) })
+};
+const LockService = { getScriptLock: () => ({ tryLock: () => true, releaseLock: () => {} }) };
 const context = vm.createContext({
   Utilities,
   CacheService,
   SpreadsheetApp,
-  SHEET_NAMES: { USERS: 'Users' },
-  withScriptLock: fn => fn(),
+  LockService,
+  SHEET_NAMES: { USERS: 'Users', MASTER: 'MASTER_PM' },
   getRefData: () => ({ daerah: ['Bandar Lampung', 'Metro'] }),
   successResponse: message => ({ message })
 });
-for (const file of ['Security.gs', 'Auth.gs', 'UserManagement.gs']) {
+for (const file of ['Security.gs', 'Auth.gs', 'UserManagement.gs', 'MasterPm.gs']) {
   vm.runInContext(readFileSync(new URL(`../gas/${file}`, import.meta.url), 'utf8'), context);
 }
 const sanitize = (json) => vm.runInContext(`sanitizeObject(JSON.parse(${JSON.stringify(json)}))`, context);
@@ -87,7 +97,7 @@ describe('authenticateUser', () => {
 
   it('logs in with the sheet columns and rejects a bad password', () => {
     cache.clear();
-    usersSheet = [header, [1, 'KSBL5', context.hashPassword('benar123'), 'Admin BL', 'admin_daerah', 'Bandar Lampung', 'aktif']];
+    sheets.Users = [header, [1, 'KSBL5', context.hashPassword('benar123'), 'Admin BL', 'admin_daerah', 'Bandar Lampung', 'aktif']];
     expect(login('ksbl5', 'benar123')).toEqual({ username: 'KSBL5', nama: 'Admin BL', role: 'admin_daerah', daerah: 'Bandar Lampung' });
     expect(() => login('KSBL5', 'salah')).toThrow('Username atau password salah');
     expect(() => login('TIDAKADA', 'benar123')).toThrow('Username atau password salah');
@@ -95,7 +105,7 @@ describe('authenticateUser', () => {
 
   it('blocks inactive accounts', () => {
     cache.clear();
-    usersSheet = [header, [1, 'KSBL5', context.hashPassword('benar123'), '', '', '', 'nonaktif']];
+    sheets.Users = [header, [1, 'KSBL5', context.hashPassword('benar123'), '', '', '', 'nonaktif']];
     expect(() => login('KSBL5', 'benar123')).toThrow('dinonaktifkan');
   });
 });
@@ -106,7 +116,7 @@ describe('user management', () => {
 
   const reset = () => {
     cache.clear();
-    usersSheet = [
+    sheets.Users = [
       header,
       [1, 'ADMIN', context.hashPassword('admin123'), 'Admin', 'super_admin', '', 'aktif'],
       [7, 'KSBL5', context.hashPassword('benar123'), 'Admin BL', 'admin_daerah', 'Bandar Lampung', 'aktif']
@@ -123,7 +133,7 @@ describe('user management', () => {
   it('adds a user with a hashed password and the next id', () => {
     reset();
     act('TAMBAH_AKUN', { username: 'KSMT5', password: 'awal1234', nama: 'Admin Metro', role: 'admin_daerah', daerah: 'Metro' });
-    const row = usersSheet[3];
+    const row = sheets.Users[3];
     expect(row[0]).toBe(8);
     expect(row[2]).toMatch(/^v2\$/);
     expect(row.slice(3)).toEqual(['Admin Metro', 'admin_daerah', 'Metro', 'aktif']);
@@ -159,5 +169,41 @@ describe('user management', () => {
     reset();
     act('RESET_PASSWORD_AKUN', { username: 'KSBL5', newPassword: 'baru5678' });
     expect(context.authenticateUser({ username: 'KSBL5', password: 'baru5678' }).username).toBe('KSBL5');
+  });
+});
+
+describe('NIK uniqueness', () => {
+  const header = ['ID PM', 'NAMA PM', 'NIK', 'NIK ALT', 'DAERAH'];
+  const NIK_A = '1801010101010001';
+  const NIK_B = '1801010101010002';
+  const reset = () => {
+    sheets.MASTER_PM = [header, ['KS-2026-00001', 'Budi', NIK_A, NIK_B, 'Metro']];
+  };
+
+  it('rejects a new PM whose NIK or NIK ALT is already used', () => {
+    reset();
+    expect(() => context.addMasterRecord({ 'NAMA PM': 'Andi', NIK: NIK_A })).toThrow(`NIK ${NIK_A} sudah terdaftar di ID PM KS-2026-00001 (daerah Metro)`);
+    expect(() => context.addMasterRecord({ 'NAMA PM': 'Andi', NIK: NIK_B })).toThrow('sudah terdaftar');
+    expect(sheets.MASTER_PM).toHaveLength(2);
+  });
+
+  it('accepts a new NIK and rejects NIK equal to NIK ALT', () => {
+    reset();
+    expect(context.addMasterRecord({ 'NAMA PM': 'Andi', NIK: '1801010101010003' })).toBe('KS-2026-00002');
+    expect(() => context.addMasterRecord({ 'NAMA PM': 'Cici', NIK: '1801010101010009', 'NIK ALT': '1801010101010009' })).toThrow('tidak boleh sama');
+  });
+
+  it('lets a PM keep its own NIK on edit but not take another PM\'s NIK', () => {
+    reset();
+    sheets.MASTER_PM.push(['KS-2026-00002', 'Andi', '1801010101010003', '', 'Metro']);
+    expect(() => context.editMasterRow({ 'ID PM': 'KS-2026-00001', 'NAMA PM': 'Budi S', NIK: NIK_A })).not.toThrow();
+    expect(sheets.MASTER_PM[1][1]).toBe('Budi S');
+    expect(() => context.editMasterRow({ 'ID PM': 'KS-2026-00002', NIK: NIK_A })).toThrow('sudah terdaftar');
+  });
+
+  it('does not block editing other fields when an old duplicate exists', () => {
+    reset();
+    sheets.MASTER_PM.push(['KS-2026-00002', 'Budi kembar', NIK_A, '', 'Metro']);
+    expect(() => context.editMasterRow({ 'ID PM': 'KS-2026-00002', 'NAMA PM': 'Budi K', NIK: NIK_A })).not.toThrow();
   });
 });
