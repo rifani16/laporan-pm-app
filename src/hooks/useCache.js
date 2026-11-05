@@ -32,6 +32,8 @@ export default function useCache(key, fetcher) {
   const [state, dispatch] = useReducer(cacheReducer, initialState);
   const { data, loading, error } = state;
   const mounted = useRef(true);
+  // Hanya hasil request terakhir yang boleh ditulis; refresh lama yang telat selesai dibuang.
+  const latestRequest = useRef(0);
 
   useEffect(() => {
     mounted.current = true;
@@ -40,6 +42,8 @@ export default function useCache(key, fetcher) {
 
   const loadData = useCallback(async (force = false) => {
     if (!mounted.current) return;
+    const requestId = ++latestRequest.current;
+    const isStale = () => !mounted.current || requestId !== latestRequest.current;
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
       if (!force) {
@@ -59,12 +63,12 @@ export default function useCache(key, fetcher) {
       // Deduplikasi request awal yang dijalankan dua kali oleh StrictMode.
       // Refresh paksa tetap selalu mengambil data terbaru.
       const fresh = force ? await fetcher() : await fetchInitialData(key, fetcher);
-      // Komponen sudah unmount (mis. logout): jangan tulis ulang cache sesi lama.
-      if (!mounted.current) return;
+      // Komponen sudah unmount (mis. logout) atau ada request lebih baru: jangan tulis.
+      if (isStale()) return;
       localStorage.setItem(key, JSON.stringify({ timestamp: Date.now(), value: fresh }));
       dispatch({ type: 'SET_DATA', payload: fresh });
     } catch (err) {
-      if (!mounted.current) return;
+      if (isStale()) return;
       console.error('Gagal mengambil data:', err);
       dispatch({ type: 'SET_ERROR', payload: err });
     }
