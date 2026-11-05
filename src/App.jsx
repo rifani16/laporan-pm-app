@@ -51,7 +51,14 @@ function PageContent() {
     <Routes>
       <Route path="/" element={<DashboardPage />} />
       <Route path="/master" element={<MasterDataPage />} />
-      <Route path="/salur" element={<PenyaluranPage />} />
+      <Route
+        path="/salur"
+        element={
+          <ProtectedRoute allowedRoles={['super_admin']}>
+            <PenyaluranPage />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/kegiatan" element={<KegiatanPage />} />
       <Route path="/program-penerima" element={<ProgramPenerimaPage />} />
       <Route

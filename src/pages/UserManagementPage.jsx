@@ -46,9 +46,9 @@ function UserFormDialog({ user, isSelf, daerahOptions, saving, onSubmit, onClose
         <label className="block text-sm font-medium text-gray-800">
           Role
           <select value={form.role} onChange={change('role')} disabled={isSelf || saving} className={inputClass}>
-            <option value="admin_daerah">Admin Daerah</option>
-            <option value="admin_wilayah">Admin Wilayah (semua daerah)</option>
-            <option value="super_admin">Super Admin</option>
+            <option value="admin_daerah">Admin Daerah (pantau 1 daerah)</option>
+            <option value="admin_wilayah">Admin Wilayah (pantau semua daerah)</option>
+            <option value="super_admin">Super Admin (kelola semua data)</option>
           </select>
           {isSelf && <span className="mt-1 block text-xs font-normal text-gray-600">Role akun sendiri tidak bisa diubah.</span>}
         </label>

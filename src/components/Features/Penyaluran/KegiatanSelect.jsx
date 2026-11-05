@@ -12,7 +12,7 @@ export default function KegiatanSelect({ kegiatanList, value, onChange, allowNon
   if (options.length === 0 && !allowNone) {
     return (
       <p role="status" className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-        Belum ada kegiatan berjalan. Minta super admin membuat kegiatan di menu Kegiatan Penyaluran.
+        Belum ada kegiatan berjalan. Buat kegiatan dulu di menu Kegiatan Penyaluran.
       </p>
     );
   }

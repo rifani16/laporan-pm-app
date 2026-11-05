@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import { useData } from '@/hooks/useData';
-import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 import Dialog from '@/components/Common/Dialog';
 
 export default function TambahPmModal({ onClose }) {
   const { refData, createMaster } = useData();
-  const { seesAllDaerah, userDaerah } = useAuth();
   const { showToast } = useToast();
 
   const [form, setForm] = useState({
@@ -16,7 +14,7 @@ export default function TambahPmModal({ onClose }) {
     'NIK ALT': '',
     'NO KK': '',
     'ALAMAT': '',
-    'DAERAH': !seesAllDaerah && userDaerah ? userDaerah : '',
+    'DAERAH': '',
     'NO HP': '',
     'ASNAF': '',
     'PEKERJAAN': '',
@@ -46,11 +44,7 @@ export default function TambahPmModal({ onClose }) {
     }
     setSubmitting(true);
     try {
-      const payload = {
-        ...form,
-        DAERAH: !seesAllDaerah && userDaerah ? userDaerah : form['DAERAH']
-      };
-      const result = await createMaster(payload);
+      const result = await createMaster(form);
       if (result.success) {
         showToast('Data PM berhasil ditambahkan', 'success');
         onClose();
@@ -115,7 +109,6 @@ export default function TambahPmModal({ onClose }) {
               className="min-h-11 w-full rounded-lg border p-2 disabled:bg-gray-100 disabled:text-gray-600"
               value={form['DAERAH']}
               onChange={e => handleChange('DAERAH', e.target.value)}
-              disabled={!seesAllDaerah}
             >
               <option value="">-- Pilih Daerah --</option>
               {refData.daerah.map(d => <option key={d}>{d}</option>)}

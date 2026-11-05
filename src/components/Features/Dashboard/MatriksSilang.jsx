@@ -1,9 +1,11 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useData } from '@/hooks/useData';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function MatriksSilang({ salurData }) {
   const { refData } = useData();
+  const { isSuperAdmin } = useAuth();
 
   const matriks = useMemo(() => {
     const m = {};
@@ -33,8 +35,8 @@ export default function MatriksSilang({ salurData }) {
       <div className="bg-white rounded-lg shadow p-4">
         <h2 className="text-lg font-bold mb-3">Matriks Silang (Daerah vs Program) - Total Dana</h2>
         <p className="text-gray-600 text-center py-4">
-          Belum ada penyaluran untuk filter ini. Ubah filter di atas, atau{' '}
-          <Link to="/salur" className="font-medium text-teal-700 underline hover:text-teal-800">input penyaluran baru</Link>.
+          Belum ada penyaluran untuk filter ini. Ubah filter di atas
+          {isSuperAdmin ? <>, atau <Link to="/salur" className="font-medium text-teal-700 underline hover:text-teal-800">input penyaluran baru</Link>.</> : '.'}
         </p>
       </div>
     );

@@ -1,13 +1,11 @@
 import { useState, useMemo, useId } from 'react';
 import { useData } from '@/hooks/useData';
-import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 import { EMPTY_SALUR_FORM, getNamaOptions, toggleBentuk, buildSalurPayload } from './salurFields';
 import KegiatanSelect from './KegiatanSelect';
 
 export default function SalurForm() {
   const { masterData, kegiatanList, createSalur } = useData();
-  const { seesAllDaerah, userDaerah } = useAuth();
   const { showToast } = useToast();
   const [selectedPmId, setSelectedPmId] = useState('');
   const [namaPenerima, setNamaPenerima] = useState('');
@@ -16,19 +14,12 @@ export default function SalurForm() {
   const [searchTerm, setSearchTerm] = useState('');
   const pmListId = useId();
 
-  const scopedMasterData = useMemo(() => {
-    if (!seesAllDaerah && userDaerah) {
-      return masterData.filter(pm => pm['DAERAH'] === userDaerah);
-    }
-    return masterData;
-  }, [masterData, seesAllDaerah, userDaerah]);
-
   const pmOptions = useMemo(() => {
-    return scopedMasterData.map(pm => ({
+    return masterData.map(pm => ({
       id: pm['ID PM'],
-      label: `${pm['ID PM']} - ${pm['NAMA PM']}${seesAllDaerah && pm['DAERAH'] ? ` (${pm['DAERAH']})` : ''}`
+      label: `${pm['ID PM']} - ${pm['NAMA PM']}${pm['DAERAH'] ? ` (${pm['DAERAH']})` : ''}`
     }));
-  }, [scopedMasterData, seesAllDaerah]);
+  }, [masterData]);
 
   const handleSearchChange = (e) => {
     const value = e.target.value;
@@ -39,7 +30,7 @@ export default function SalurForm() {
     if (match) setForm(EMPTY_SALUR_FORM);
   };
 
-  const selectedPm = scopedMasterData.find(p => p['ID PM'] === selectedPmId);
+  const selectedPm = masterData.find(p => p['ID PM'] === selectedPmId);
   const namaOptions = getNamaOptions(selectedPm);
 
   const handleSubmit = async (e) => {

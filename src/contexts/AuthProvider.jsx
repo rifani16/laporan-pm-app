@@ -51,7 +51,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const isSuperAdmin = user?.role === 'super_admin';
-  // Admin wilayah: hak seperti admin daerah, tapi cakupannya seluruh daerah.
+  // Hanya super admin yang mengubah data. Admin wilayah memantau semua daerah, admin daerah satu daerah.
   const isAdminWilayah = user?.role === 'admin_wilayah';
   const seesAllDaerah = isSuperAdmin || isAdminWilayah;
   const userDaerah = seesAllDaerah ? '' : user?.daerah || '';

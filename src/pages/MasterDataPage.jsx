@@ -24,7 +24,7 @@ const EXPORT_COLUMNS = [
 
 export default function MasterDataPage() {
   const { masterData, updateMaster, deleteMaster, loading, refData } = useData();
-  const { seesAllDaerah, userDaerah } = useAuth();
+  const { isSuperAdmin, seesAllDaerah, userDaerah } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [filterDaerah, setFilterDaerah] = useState('semua');
   const [currentPage, setCurrentPage] = useState(1);
@@ -102,12 +102,14 @@ export default function MasterDataPage() {
           </button>
         )}
         <ExportExcelButton fileName="daftar-pm" rows={filteredMaster} columns={EXPORT_COLUMNS} />
-        <button
-          onClick={() => setShowModal(true)}
-          className="min-h-11 whitespace-nowrap rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
-        >
-          + Tambah PM
-        </button>
+        {isSuperAdmin && (
+          <button
+            onClick={() => setShowModal(true)}
+            className="min-h-11 whitespace-nowrap rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
+          >
+            + Tambah PM
+          </button>
+        )}
       </div>
       <p className="mb-4 text-sm text-gray-600" aria-live="polite">
         Menampilkan {filteredMaster.length} PM
@@ -120,7 +122,7 @@ export default function MasterDataPage() {
             <button onClick={resetFilters} className="font-medium text-teal-700 underline hover:text-teal-800">Reset filter</button>
           </>
         ) : (
-          'Belum ada data PM. Tambahkan lewat tombol "+ Tambah PM" di atas.'
+          isSuperAdmin ? 'Belum ada data PM. Tambahkan lewat tombol "+ Tambah PM" di atas.' : 'Belum ada data PM untuk daerah ini.'
         )}
         onUpdate={updateMaster}
         onDelete={deleteMaster}

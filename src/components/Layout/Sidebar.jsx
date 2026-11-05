@@ -21,7 +21,7 @@ export default function Sidebar({ isMobile = false, onClose }) {
     { to: '/', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/master', label: 'Daftar PM', icon: Users },
     { to: '/kegiatan', label: 'Kegiatan Penyaluran', icon: CalendarDays },
-    { to: '/salur', label: 'Input Penyaluran', icon: PlusCircle },
+    { to: '/salur', label: 'Input Penyaluran', icon: PlusCircle, superOnly: true },
     { to: '/program-penerima', label: 'Penerima per Program', icon: ListFilter },
     { to: '/program', label: 'Manajemen Program', icon: Settings, superOnly: true },
     { to: '/akun', label: 'Kelola Akun', icon: UserCog, superOnly: true }

@@ -327,10 +327,11 @@ describe('kegiatan penyaluran', () => {
   });
 });
 
-describe('admin wilayah (hak admin daerah, cakupan seluruh daerah)', () => {
+describe('role access: only super admin writes, admin wilayah and daerah monitor', () => {
   const USERS_HEADER = ['id', 'username', 'password', 'nama', 'role', 'daerah', 'status'];
   const wilayah = { username: 'WIL1', role: 'admin_wilayah', daerah: '' };
   const daerahMetro = { username: 'KSMT5', role: 'admin_daerah', daerah: 'Metro' };
+  const superAdmin = { username: 'ADMIN', role: 'super_admin', daerah: '' };
   const rows = [{ DAERAH: 'Metro' }, { DAERAH: 'Bandar Lampung' }];
 
   const post = (session, action, data) => {
@@ -346,17 +347,18 @@ describe('admin wilayah (hak admin daerah, cakupan seluruh daerah)', () => {
     expect(context.filterByDaerah(rows, daerahMetro)).toEqual([{ DAERAH: 'Metro' }]);
   });
 
-  it('adds a PM in any daerah, while admin daerah is pinned to its own', () => {
-    sheets.MASTER_PM = [['ID PM', 'NAMA PM', 'NIK', 'NIK ALT', 'DAERAH']];
-    expect(post(wilayah, 'TAMBAH_MASTER', { 'NAMA PM': 'Andi', DAERAH: 'Bandar Lampung' }).success).toBe(true);
-    expect(post(daerahMetro, 'TAMBAH_MASTER', { 'NAMA PM': 'Cici', DAERAH: 'Bandar Lampung' }).success).toBe(true);
-    expect(sheets.MASTER_PM.slice(1).map(row => row[4])).toEqual(['Bandar Lampung', 'Metro']);
+  it('rejects every write from admin wilayah and admin daerah, including unknown actions', () => {
+    const writes = ['TAMBAH_MASTER', 'EDIT_MASTER', 'HAPUS_MASTER', 'TAMBAH_SALUR', 'EDIT_SALUR', 'HAPUS_PM_PROGRAM',
+      'TAMBAH_PROGRAM', 'TAMBAH_KEGIATAN', 'TAMBAH_AKUN', 'AKSI_BARU_NANTI'];
+    for (const session of [wilayah, daerahMetro]) {
+      for (const action of writes) expect(post(session, action, { x: 1 }).code).toBe(403);
+    }
   });
 
-  it('cannot delete or manage program, kegiatan, and accounts', () => {
-    for (const action of ['HAPUS_MASTER', 'HAPUS_PM_PROGRAM', 'TAMBAH_PROGRAM', 'TAMBAH_KEGIATAN', 'TAMBAH_AKUN']) {
-      expect(post(wilayah, action, { x: 1 }).code).toBe(403);
-    }
+  it('lets monitors log out and lets super admin write', () => {
+    expect(post(daerahMetro, 'LOGOUT', {}).success).toBe(true);
+    sheets.MASTER_PM = [['ID PM', 'NAMA PM', 'NIK', 'NIK ALT', 'DAERAH']];
+    expect(post(superAdmin, 'TAMBAH_MASTER', { 'NAMA PM': 'Andi', DAERAH: 'Metro' }).success).toBe(true);
   });
 
   it('can be created by super admin without a daerah', () => {

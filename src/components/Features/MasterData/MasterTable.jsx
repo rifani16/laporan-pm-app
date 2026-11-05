@@ -98,7 +98,9 @@ export default function MasterTable({ data, emptyState, onUpdate, onDelete, curr
                 <td className={`p-2 text-right ${isSuperAdmin ? 'w-48 min-w-48' : 'w-32 min-w-32'}`}>
                   <div className="flex flex-wrap justify-end gap-1">
                     <button onClick={() => setDetailItem(pm)} className="min-h-11 rounded-lg px-2 font-medium text-gray-700 hover:bg-gray-100">Detail</button>
-                    <button onClick={() => setEditItem(pm)} className="min-h-11 rounded-lg px-2 font-medium text-teal-700 hover:bg-teal-50">Edit</button>
+                    {isSuperAdmin && (
+                      <button onClick={() => setEditItem(pm)} className="min-h-11 rounded-lg px-2 font-medium text-teal-700 hover:bg-teal-50">Edit</button>
+                    )}
                     {isSuperAdmin && (
                       <button
                         onClick={() => setDeleteTarget(pm)}

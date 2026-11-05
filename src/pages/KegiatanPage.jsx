@@ -251,7 +251,7 @@ export default function KegiatanPage() {
         {!loading && filtered.length === 0 && (
           <p className="p-8 text-center text-sm text-gray-600">
             {kegiatanList.length === 0
-              ? (isSuperAdmin ? 'Belum ada kegiatan. Tambahkan lewat tombol "Tambah Kegiatan" di atas.' : 'Belum ada kegiatan. Super admin perlu membuat kegiatan sebelum penyaluran bisa dicatat.')
+              ? (isSuperAdmin ? 'Belum ada kegiatan. Tambahkan lewat tombol "Tambah Kegiatan" di atas.' : 'Belum ada kegiatan penyaluran.')
               : 'Tidak ada kegiatan yang cocok dengan filter.'}
           </p>
         )}
