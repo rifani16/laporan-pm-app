@@ -47,8 +47,8 @@ export default function EditSalurModal({ data, onClose, onSave }) {
   };
 
   return (
-    <Dialog title="Edit Transaksi" onClose={onClose} closeDisabled={submitting} maxWidth="max-w-md">
-        <div className="space-y-3">
+    <Dialog title="Edit Transaksi" onClose={onClose} closeDisabled={submitting} maxWidth="max-w-3xl">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label htmlFor="edit-salur-id-pm" className="block text-sm font-medium">ID PM</label>
             <input id="edit-salur-id-pm" type="text" className="min-h-11 w-full rounded-lg border bg-gray-100 p-2" value={fixedPmId} disabled />
@@ -90,7 +90,7 @@ export default function EditSalurModal({ data, onClose, onSave }) {
             <label htmlFor="edit-salur-jumlah" className="block text-sm font-medium">Jumlah Penerimaan (Rp)</label>
             <input id="edit-salur-jumlah" type="number" className="min-h-11 w-full rounded-lg border p-2 numeric" value={form.JUMLAH_PENERIMAAN} onChange={e => setForm({...form, JUMLAH_PENERIMAAN: e.target.value})} placeholder="Nominal dalam Rupiah" />
           </div>
-          <div>
+          <div className="sm:col-span-2">
             <label htmlFor="edit-salur-keterangan" className="block text-sm font-medium">Keterangan</label>
             <textarea id="edit-salur-keterangan" className="w-full rounded-lg border p-2" value={form.KETERANGAN} onChange={e => setForm({...form, KETERANGAN: e.target.value})} rows={2} placeholder="Catatan tambahan" />
           </div>

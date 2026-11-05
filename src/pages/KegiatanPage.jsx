@@ -75,10 +75,13 @@ function KegiatanFormDialog({ kegiatan, programOptions, daerahOptions, sumberDan
   );
 
   return (
-    <Dialog title={isNew ? 'Tambah Kegiatan' : 'Edit Kegiatan'} onClose={onClose} closeDisabled={saving} maxWidth="max-w-xl">
+    <Dialog title={isNew ? 'Tambah Kegiatan' : 'Edit Kegiatan'} onClose={onClose} closeDisabled={saving} maxWidth="max-w-5xl">
       <form onSubmit={handleSubmit} className="space-y-4">
-        {field('Nama kegiatan', 'NAMA KEGIATAN', { required: true, maxLength: 150, 'data-autofocus': true })}
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="sm:col-span-2">
+            {field('Nama kegiatan', 'NAMA KEGIATAN', { required: true, maxLength: 150, 'data-autofocus': true })}
+          </div>
+          {field('Tanggal penyaluran', 'TANGGAL', { type: 'date', required: true })}
           <label className="block text-sm font-medium text-gray-800">
             Program
             <select value={form.PROGRAM} onChange={change('PROGRAM')} disabled={saving || hasTransactions} required className={inputClass}>
@@ -87,7 +90,6 @@ function KegiatanFormDialog({ kegiatan, programOptions, daerahOptions, sumberDan
             </select>
             {hasTransactions && <span className="mt-1 block text-xs font-normal text-gray-600">Tidak bisa diganti karena sudah ada transaksi.</span>}
           </label>
-          {field('Tanggal penyaluran', 'TANGGAL', { type: 'date', required: true })}
           <label className="block text-sm font-medium text-gray-800">
             Sumber dana
             <input value={form['SUMBER DANA']} onChange={change('SUMBER DANA')} disabled={saving} list="sumber-dana-options" maxLength={100} placeholder="Contoh: Zakat" className={inputClass} />
@@ -102,8 +104,9 @@ function KegiatanFormDialog({ kegiatan, programOptions, daerahOptions, sumberDan
             <select value={form.STATUS} onChange={change('STATUS')} disabled={saving} className={inputClass}>
               {KEGIATAN_STATUS.map(status => <option key={status} value={status}>{status}</option>)}
             </select>
-            <span className="mt-1 block text-xs font-normal text-gray-600">Kegiatan Selesai tidak bisa menerima transaksi baru.</span>
+            <span className="mt-1 block text-xs font-normal text-gray-600">Selesai: tidak bisa menerima transaksi baru.</span>
           </label>
+          {field('Alamat penyaluran', 'ALAMAT PENYALURAN', { maxLength: 200, placeholder: 'Contoh: Aula Kantor Kecamatan' })}
         </div>
         <fieldset aria-describedby={daerahError ? 'kegiatan-daerah-error' : undefined}>
           <legend className="flex w-full items-center justify-between gap-2 text-sm font-medium text-gray-800">
@@ -112,7 +115,7 @@ function KegiatanFormDialog({ kegiatan, programOptions, daerahOptions, sumberDan
               {allDaerahSelected ? 'Kosongkan' : 'Pilih semua'}
             </button>
           </legend>
-          <div className={`grid gap-x-4 rounded-lg border p-3 sm:grid-cols-2 ${daerahError ? 'border-red-400' : 'border-gray-300'}`}>
+          <div className={`grid gap-x-4 rounded-lg border px-3 py-1 sm:grid-cols-2 lg:grid-cols-4 ${daerahError ? 'border-red-400' : 'border-gray-300'}`}>
             {daerahOptions.map(daerah => (
               <label key={daerah} className="flex min-h-11 items-center gap-2 text-sm">
                 <input type="checkbox" checked={form.DAERAH.includes(daerah)} onChange={() => toggleDaerah(daerah)} disabled={saving} />
@@ -122,7 +125,6 @@ function KegiatanFormDialog({ kegiatan, programOptions, daerahOptions, sumberDan
           </div>
           {daerahError && <p id="kegiatan-daerah-error" className="mt-1 text-sm text-red-700">Pilih minimal satu daerah.</p>}
         </fieldset>
-        {field('Alamat penyaluran', 'ALAMAT PENYALURAN', { maxLength: 200, placeholder: 'Contoh: Aula Kantor Kecamatan Banjarmasin Utara' })}
         <label className="block text-sm font-medium text-gray-800">
           Keterangan
           <textarea value={form.KETERANGAN} onChange={change('KETERANGAN')} disabled={saving} rows={2} maxLength={500} className={inputClass} />

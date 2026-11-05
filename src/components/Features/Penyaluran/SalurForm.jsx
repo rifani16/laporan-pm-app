@@ -58,11 +58,11 @@ export default function SalurForm() {
   };
 
   return (
-    <div className="max-w-2xl rounded-xl bg-white p-4 shadow sm:p-6">
+    <div className="max-w-4xl rounded-xl bg-white p-4 shadow sm:p-6">
       <h2 className="mb-4 text-xl font-bold">Form Penyaluran Bantuan</h2>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
+      <form onSubmit={handleSubmit} className="grid gap-4 lg:grid-cols-2">
+        <div className="lg:col-span-2">
           <label htmlFor="pm-search" className="block text-sm font-medium">Cari / Pilih ID PM atau Nama PM</label>
           <input
             id="pm-search"
@@ -131,7 +131,7 @@ export default function SalurForm() {
           />
         </div>
 
-        <div>
+        <div className="lg:col-span-2">
           <label htmlFor="keterangan-salur" className="block text-sm font-medium">Keterangan</label>
           <textarea
             id="keterangan-salur"
@@ -143,7 +143,7 @@ export default function SalurForm() {
           />
         </div>
 
-        <button type="submit" disabled={submitting} className="min-h-11 w-full rounded-lg bg-teal-600 px-4 py-2 font-medium text-white hover:bg-teal-700 disabled:opacity-50">
+        <button type="submit" disabled={submitting} className="min-h-11 w-full rounded-lg lg:col-span-2 bg-teal-600 px-4 py-2 font-medium text-white hover:bg-teal-700 disabled:opacity-50">
           {submitting ? 'Menyimpan...' : 'Simpan Penyaluran'}
         </button>
       </form>

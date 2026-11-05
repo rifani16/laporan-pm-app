@@ -59,9 +59,10 @@ export default function TambahPmModal({ onClose }) {
   };
 
   return (
-    <Dialog title="Tambah Penerima Manfaat Baru" onClose={onClose} closeDisabled={submitting} maxWidth="max-w-2xl">
+    <Dialog title="Tambah Penerima Manfaat Baru" onClose={onClose} closeDisabled={submitting} maxWidth="max-w-4xl">
       <form onSubmit={handleSubmit}>
-        <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="contents">
           <div>
             <label htmlFor="tambah-nama-pm" className="block text-sm font-medium">Nama PM *</label>
             <input id="tambah-nama-pm" className="min-h-11 w-full rounded-lg border p-2" value={form['NAMA PM']} onChange={e => handleChange('NAMA PM', e.target.value)} required />
@@ -73,7 +74,7 @@ export default function TambahPmModal({ onClose }) {
           </div>
         </div>
 
-        <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="contents">
           <div>
             <label htmlFor="tambah-nama-alt" className="block text-sm font-medium">Nama PM alternatif</label>
             <input id="tambah-nama-alt" className="min-h-11 w-full rounded-lg border p-2" value={form['NAMA PM ALT']} onChange={e => handleChange('NAMA PM ALT', e.target.value)} />
@@ -85,7 +86,7 @@ export default function TambahPmModal({ onClose }) {
           </div>
         </div>
 
-        <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="contents">
           <div>
             <label htmlFor="tambah-no-kk" className="block text-sm font-medium">Nomor KK</label>
             <input id="tambah-no-kk" inputMode="numeric" maxLength={16} className="min-h-11 w-full rounded-lg border p-2 numeric" value={form['NO KK']} onChange={e => handleIdentityNumber('NO KK', e.target.value)} aria-describedby="tambah-kk-help" />
@@ -97,8 +98,8 @@ export default function TambahPmModal({ onClose }) {
           </div>
         </div>
 
-        <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div>
+        <div className="contents">
+          <div className="lg:col-span-2">
             <label htmlFor="tambah-alamat" className="block text-sm font-medium">Alamat</label>
             <input id="tambah-alamat" className="min-h-11 w-full rounded-lg border p-2" value={form['ALAMAT']} onChange={e => handleChange('ALAMAT', e.target.value)} />
           </div>
@@ -116,7 +117,7 @@ export default function TambahPmModal({ onClose }) {
           </div>
         </div>
 
-        <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="contents">
           <div>
             <label htmlFor="tambah-asnaf" className="block text-sm font-medium">Asnaf</label>
             <select id="tambah-asnaf" className="min-h-11 w-full rounded-lg border p-2" value={form['ASNAF']} onChange={e => handleChange('ASNAF', e.target.value)}>
@@ -128,6 +129,8 @@ export default function TambahPmModal({ onClose }) {
             <label htmlFor="tambah-pekerjaan" className="block text-sm font-medium">Pekerjaan</label>
             <input id="tambah-pekerjaan" className="min-h-11 w-full rounded-lg border p-2" value={form['PEKERJAAN']} onChange={e => handleChange('PEKERJAAN', e.target.value)} />
           </div>
+        </div>
+
         </div>
 
         <div className="mb-3">

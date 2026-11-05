@@ -14,8 +14,8 @@ export default function DetailSalurModal({ data, masterData, onClose }) {
   const isAlternatif = namaPenerimaTransaksi === namaAlternatif && namaAlternatif !== '';
 
   return (
-    <Dialog title="Detail Transaksi" onClose={onClose} maxWidth="max-w-lg">
-        <div className="space-y-3">
+    <Dialog title="Detail Transaksi" onClose={onClose} maxWidth="max-w-3xl">
+        <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
           <div><label className="block text-sm font-medium text-gray-500">ID PM</label><p className="text-gray-800">{data['ID PM'] || '-'}</p></div>
           {isAlternatif ? (
             <>

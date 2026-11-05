@@ -45,12 +45,12 @@ export default function EditModal({ item, onClose, onSave }) {
   };
 
   return (
-    <Dialog title="Edit Data PM" onClose={onClose} closeDisabled={submitting} maxWidth="max-w-lg">
-      <div className="space-y-3">
+    <Dialog title="Edit Data PM" onClose={onClose} closeDisabled={submitting} maxWidth="max-w-4xl">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {Object.keys(form).map(k => {
           const fieldId = `edit-pm-${k.toLowerCase().replace(/\s+/g, '-')}`;
           return (
-            <div key={k}>
+            <div key={k} className={k === 'CATATAN' ? 'sm:col-span-2 lg:col-span-3' : undefined}>
               <label htmlFor={fieldId} className="block text-sm font-medium">{k}</label>
               {k === 'ASNAF' ? (
                 <select id={fieldId} className="min-h-11 w-full rounded-lg border p-2" value={form[k]} onChange={e => setForm({ ...form, [k]: e.target.value })}>
