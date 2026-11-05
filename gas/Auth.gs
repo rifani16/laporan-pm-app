@@ -41,11 +41,10 @@ function authenticateUser(data) {
     recordLoginFailure(username);
     throw new Error(INVALID_CREDENTIALS_MESSAGE);
   }
-  if (needsRehash(storedPassword)) user.setPassword(hashPassword(password));
+  if (needsRehash(storedPassword)) user.set('password', hashPassword(password));
 
   // Status dicek setelah password benar agar tidak membocorkan keberadaan akun
-  const status = String(user.get('status') || '').trim().toLowerCase();
-  if (status && !['active', 'aktif', '1', 'true'].includes(status)) {
+  if (!isActiveStatus(user.get('status'))) {
     throw new Error('Akun Anda sedang dinonaktifkan. Silakan hubungi Super Admin.');
   }
 
@@ -69,32 +68,47 @@ function changeUserPassword(data) {
     throw new Error('Data perubahan password tidak lengkap');
   }
 
-  if (newPassword.length < MIN_PASSWORD_LENGTH) {
-    throw new Error(`Password baru minimal ${MIN_PASSWORD_LENGTH} karakter`);
-  }
-
+  validateNewPassword(newPassword);
   authenticateUser({ username, password: oldPassword });
-  findUser(username).setPassword(hashPassword(newPassword));
+  findUser(username).set('password', hashPassword(newPassword));
+}
+
+function validateNewPassword(password) {
+  if (String(password || '').length < MIN_PASSWORD_LENGTH) {
+    throw new Error(`Password minimal ${MIN_PASSWORD_LENGTH} karakter`);
+  }
+}
+
+function isActiveStatus(value) {
+  const status = String(value || '').trim().toLowerCase();
+  return !status || ['active', 'aktif', '1', 'true'].includes(status);
 }
 
 // Kolom sheet Users: id, username, password, nama, role, daerah, status.
-function findUser(username) {
+function getUsersSheet() {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAMES.USERS);
   if (!sheet) throw new Error(`Sheet '${SHEET_NAMES.USERS}' tidak ditemukan.`);
 
   const [headers, ...rows] = sheet.getDataRange().getValues();
-  const col = name => headers.indexOf(name);
-  if (col('username') === -1 || col('password') === -1) {
+  if (headers.indexOf('username') === -1 || headers.indexOf('password') === -1) {
     throw new Error('Kolom "username" atau "password" tidak ditemukan di sheet Users');
   }
+  return { sheet, headers, rows };
+}
 
-  const target = username.toLowerCase();
+function findUser(username) {
+  const { sheet, headers, rows } = getUsersSheet();
+  const col = name => headers.indexOf(name);
+  const target = String(username || '').trim().toLowerCase();
   const index = rows.findIndex(row => String(row[col('username')] || '').trim().toLowerCase() === target);
-  if (index === -1) return null;
+  if (!target || index === -1) return null;
 
   return {
     get: name => rows[index][col(name)],
-    setPassword: hash => sheet.getRange(index + 2, col('password') + 1).setValue(hash)
+    set: (name, value) => {
+      if (col(name) === -1) throw new Error(`Kolom "${name}" tidak ditemukan di sheet Users`);
+      sheet.getRange(index + 2, col(name) + 1).setValue(value);
+    }
   };
 }
 
@@ -187,6 +201,6 @@ function resetPasswordDialog() {
     return ui.alert(`Password minimal ${MIN_PASSWORD_LENGTH} karakter. Belum ada yang diubah.`);
   }
 
-  user.setPassword(hashPassword(password));
+  user.set('password', hashPassword(password));
   ui.alert(`Password ${username} sudah diganti.`);
 }

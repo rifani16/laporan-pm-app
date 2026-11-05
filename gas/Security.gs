@@ -48,6 +48,22 @@ function getSession(token) {
   return cached ? JSON.parse(cached) : null;
 }
 
+// Status, role, dan daerah dibaca ulang dari sheet supaya perubahan akun langsung berlaku.
+function getActiveSession(token) {
+  const session = getSession(token);
+  if (!session) return null;
+  const user = findUser(session.username);
+  if (!user || !isActiveStatus(user.get('status'))) {
+    destroySession(token);
+    return null;
+  }
+  return {
+    ...session,
+    role: String(user.get('role') || 'admin_daerah').trim(),
+    daerah: String(user.get('daerah') || '').trim()
+  };
+}
+
 function destroySession(token) {
   if (token) CacheService.getScriptCache().remove('sess_' + token);
 }

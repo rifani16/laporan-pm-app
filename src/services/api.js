@@ -70,6 +70,16 @@ export const editProgram = (oldName, newName) =>
 
 export const deleteProgram = (name) => post("HAPUS_PROGRAM", { name });
 
+export const addUser = (user) => post("TAMBAH_AKUN", user);
+
+export const editUser = (user) => post("EDIT_AKUN", user);
+
+export const setUserStatus = (username, aktif) =>
+  post("STATUS_AKUN", { username, aktif });
+
+export const resetUserPassword = (username, newPassword) =>
+  post("RESET_PASSWORD_AKUN", { username, newPassword });
+
 export const loginUser = async (username, password) => {
   const json = await post("LOGIN", { username, password });
   if (!json.success) {

@@ -27,23 +27,29 @@ export const DataProvider = ({ children }) => {
       deleteSalur: withRefresh(api.deleteSalur),
       createProgram: withRefresh(api.addProgram),
       updateProgram: withRefresh(api.editProgram),
-      deleteProgram: withRefresh(api.deleteProgram)
+      deleteProgram: withRefresh(api.deleteProgram),
+      createUser: withRefresh(api.addUser),
+      updateUser: withRefresh(api.editUser),
+      updateUserStatus: withRefresh(api.setUserStatus),
+      resetUserPassword: api.resetUserPassword
     };
   }, [invalidateCache]);
 
   const masterData = data?.master || EMPTY_LIST;
   const salurData = data?.salur || EMPTY_LIST;
   const refData = data?.ref || EMPTY_REF_DATA;
+  const users = data?.users || EMPTY_LIST;
 
   const contextValue = useMemo(() => ({
     masterData,
     salurData,
     refData,
+    users,
     loaded: data != null,
     loading,
     error,
     ...actions
-  }), [masterData, salurData, refData, data, loading, error, actions]);
+  }), [masterData, salurData, refData, users, data, loading, error, actions]);
 
   return (
     <DataContext.Provider value={contextValue}>

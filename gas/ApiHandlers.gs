@@ -1,6 +1,8 @@
+const USER_ACTIONS = ['TAMBAH_AKUN', 'EDIT_AKUN', 'STATUS_AKUN', 'RESET_PASSWORD_AKUN'];
 const SUPER_ADMIN_ONLY_ACTIONS = [
   'HAPUS_MASTER', 'HAPUS_PM_PROGRAM',
-  'TAMBAH_PROGRAM', 'EDIT_PROGRAM', 'HAPUS_PROGRAM'
+  'TAMBAH_PROGRAM', 'EDIT_PROGRAM', 'HAPUS_PROGRAM',
+  ...USER_ACTIONS
 ];
 const DAERAH_SCOPED_ACTIONS = ['TAMBAH_MASTER', 'EDIT_MASTER', 'TAMBAH_SALUR', 'EDIT_SALUR'];
 
@@ -30,13 +32,14 @@ function handleGetRequest(e) {
     const params = (e && e.parameter) || {};
     if (!checkApiKey(params.api_key)) return errorResponse('Unauthorized', 401);
 
-    const session = getSession(params.token);
+    const session = getActiveSession(params.token);
     if (!session) return errorResponse('Sesi berakhir, silakan login ulang', 401);
 
     return dataResponse({
       master: filterByDaerah(getMasterWithAggregates(), session),
       salur: filterByDaerah(getSheetData(SHEET_NAMES.SALUR), session),
-      ref: getRefData()
+      ref: getRefData(),
+      users: isSuperAdmin(session) ? listUsers() : []
     });
   } catch (err) {
     return errorResponse(err.message);
@@ -57,7 +60,7 @@ function handlePostRequest(e) {
 
     if (action === 'LOGIN') return handleAuthAction(action, sanitizedData);
 
-    const session = getSession(body.session_token);
+    const session = getActiveSession(body.session_token);
     if (!session) return errorResponse('Sesi berakhir, silakan login ulang', 401);
 
     if (SUPER_ADMIN_ONLY_ACTIONS.includes(action) && !isSuperAdmin(session)) {
@@ -68,6 +71,7 @@ function handlePostRequest(e) {
       sanitizedData.username = session.username;
       sanitizedData.session_token = body.session_token;
     }
+    if (USER_ACTIONS.includes(action)) sanitizedData.actor = session.username;
 
     if (!isSuperAdmin(session) && DAERAH_SCOPED_ACTIONS.includes(action)) {
       if (!session.daerah) return errorResponse('Akun belum memiliki daerah', 403);
@@ -87,7 +91,8 @@ function handlePostRequest(e) {
       handleAuthAction,
       handleMasterAction,
       handlePenyaluranAction,
-      handleProgramAction
+      handleProgramAction,
+      handleUserAction
     ];
 
     for (const handler of featureHandlers) {

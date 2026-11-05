@@ -5,6 +5,7 @@ import {
   PlusCircle,
   ListFilter,
   Settings,
+  UserCog,
   LogOut,
   X
 } from 'lucide-react';
@@ -18,7 +19,8 @@ export default function Sidebar({ isMobile = false, onClose }) {
     { to: '/master', label: 'Daftar PM', icon: Users },
     { to: '/salur', label: 'Input Penyaluran', icon: PlusCircle },
     { to: '/program-penerima', label: 'Penerima per Program', icon: ListFilter },
-    { to: '/program', label: 'Manajemen Program', icon: Settings, superOnly: true }
+    { to: '/program', label: 'Manajemen Program', icon: Settings, superOnly: true },
+    { to: '/akun', label: 'Kelola Akun', icon: UserCog, superOnly: true }
   ].filter(item => !item.superOnly || isSuperAdmin);
 
   return (

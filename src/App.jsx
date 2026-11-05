@@ -14,6 +14,7 @@ import MasterDataPage from './pages/MasterDataPage';
 import PenyaluranPage from './pages/PenyaluranPage';
 import ProgramPenerimaPage from './pages/ProgramPenerimaPage';
 import ProgramManagementPage from './pages/ProgramManagementPage';
+import UserManagementPage from './pages/UserManagementPage';
 
 function StatePanel({ title, children }) {
   return (
@@ -56,6 +57,14 @@ function PageContent() {
         element={
           <ProtectedRoute allowedRoles={['super_admin']}>
             <ProgramManagementPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/akun"
+        element={
+          <ProtectedRoute allowedRoles={['super_admin']}>
+            <UserManagementPage />
           </ProtectedRoute>
         }
       />

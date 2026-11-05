@@ -22,13 +22,22 @@ let usersSheet = [];
 const SpreadsheetApp = {
   getActiveSpreadsheet: () => ({
     getSheetByName: () => ({
-      getDataRange: () => ({ getValues: () => usersSheet }),
-      getRange: (row, column) => ({ setValue: v => { usersSheet[row - 1][column - 1] = v; } })
+      getDataRange: () => ({ getValues: () => usersSheet.map(row => [...row]) }),
+      getRange: (row, column) => ({ setValue: v => { usersSheet[row - 1][column - 1] = v; } }),
+      appendRow: row => usersSheet.push(row)
     })
   })
 };
-const context = vm.createContext({ Utilities, CacheService, SpreadsheetApp, SHEET_NAMES: { USERS: 'Users' } });
-for (const file of ['Security.gs', 'Auth.gs']) {
+const context = vm.createContext({
+  Utilities,
+  CacheService,
+  SpreadsheetApp,
+  SHEET_NAMES: { USERS: 'Users' },
+  withScriptLock: fn => fn(),
+  getRefData: () => ({ daerah: ['Bandar Lampung', 'Metro'] }),
+  successResponse: message => ({ message })
+});
+for (const file of ['Security.gs', 'Auth.gs', 'UserManagement.gs']) {
   vm.runInContext(readFileSync(new URL(`../gas/${file}`, import.meta.url), 'utf8'), context);
 }
 const sanitize = (json) => vm.runInContext(`sanitizeObject(JSON.parse(${JSON.stringify(json)}))`, context);
@@ -88,5 +97,67 @@ describe('authenticateUser', () => {
     cache.clear();
     usersSheet = [header, [1, 'KSBL5', context.hashPassword('benar123'), '', '', '', 'nonaktif']];
     expect(() => login('KSBL5', 'benar123')).toThrow('dinonaktifkan');
+  });
+});
+
+describe('user management', () => {
+  const header = ['id', 'username', 'password', 'nama', 'role', 'daerah', 'status'];
+  const act = (action, data) => context.handleUserAction(action, { actor: 'ADMIN', ...data });
+
+  const reset = () => {
+    cache.clear();
+    usersSheet = [
+      header,
+      [1, 'ADMIN', context.hashPassword('admin123'), 'Admin', 'super_admin', '', 'aktif'],
+      [7, 'KSBL5', context.hashPassword('benar123'), 'Admin BL', 'admin_daerah', 'Bandar Lampung', 'aktif']
+    ];
+  };
+
+  it('lists users without password hashes', () => {
+    reset();
+    const users = context.listUsers();
+    expect(users.map(u => u.username)).toEqual(['ADMIN', 'KSBL5']);
+    expect(JSON.stringify(users)).not.toContain('v2$');
+  });
+
+  it('adds a user with a hashed password and the next id', () => {
+    reset();
+    act('TAMBAH_AKUN', { username: 'KSMT5', password: 'awal1234', nama: 'Admin Metro', role: 'admin_daerah', daerah: 'Metro' });
+    const row = usersSheet[3];
+    expect(row[0]).toBe(8);
+    expect(row[2]).toMatch(/^v2\$/);
+    expect(row.slice(3)).toEqual(['Admin Metro', 'admin_daerah', 'Metro', 'aktif']);
+    expect(context.authenticateUser({ username: 'KSMT5', password: 'awal1234' }).daerah).toBe('Metro');
+  });
+
+  it('rejects duplicate usernames, unknown daerah, and short passwords', () => {
+    reset();
+    const base = { username: 'BARU1', password: 'awal1234', role: 'admin_daerah', daerah: 'Metro' };
+    expect(() => act('TAMBAH_AKUN', { ...base, username: 'ksbl5' })).toThrow('sudah dipakai');
+    expect(() => act('TAMBAH_AKUN', { ...base, daerah: 'Tidak Ada' })).toThrow('daerah');
+    expect(() => act('TAMBAH_AKUN', { ...base, password: '123' })).toThrow('minimal');
+  });
+
+  it('protects the acting super admin from locking themselves out', () => {
+    reset();
+    expect(() => act('EDIT_AKUN', { username: 'ADMIN', role: 'admin_daerah', daerah: 'Metro' })).toThrow('Role akun sendiri');
+    expect(() => act('STATUS_AKUN', { username: 'ADMIN', aktif: false })).toThrow('Akun sendiri');
+  });
+
+  it('ends the session of a deactivated user and applies role changes immediately', () => {
+    reset();
+    const token = context.createSession({ username: 'KSBL5', role: 'admin_daerah', daerah: 'Bandar Lampung' });
+    act('EDIT_AKUN', { username: 'KSBL5', nama: 'Admin BL', role: 'admin_daerah', daerah: 'Metro' });
+    expect(context.getActiveSession(token).daerah).toBe('Metro');
+
+    act('STATUS_AKUN', { username: 'KSBL5', aktif: false });
+    expect(context.getActiveSession(token)).toBeNull();
+    expect(() => context.authenticateUser({ username: 'KSBL5', password: 'benar123' })).toThrow('dinonaktifkan');
+  });
+
+  it('resets a password', () => {
+    reset();
+    act('RESET_PASSWORD_AKUN', { username: 'KSBL5', newPassword: 'baru5678' });
+    expect(context.authenticateUser({ username: 'KSBL5', password: 'baru5678' }).username).toBe('KSBL5');
   });
 });
