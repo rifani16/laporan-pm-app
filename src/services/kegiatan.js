@@ -21,3 +21,6 @@ export function formatTanggal(tanggal) {
 }
 
 export const formatRupiah = (value) => `Rp ${(Number(value) || 0).toLocaleString('id-ID')}`;
+
+// Kolom DAERAH kegiatan berisi satu atau lebih daerah, dipisah koma.
+export const parseDaerahList = (value) => String(value || '').split(',').map(d => d.trim()).filter(Boolean);

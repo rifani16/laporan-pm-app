@@ -8,7 +8,7 @@ import ExportExcelButton from '../components/Common/ExportExcelButton';
 import { useData } from '../hooks/useData';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
-import { KEGIATAN_STATUS, formatRupiah, formatTanggal, inDateRange } from '../services/kegiatan';
+import { KEGIATAN_STATUS, formatRupiah, formatTanggal, inDateRange, parseDaerahList } from '../services/kegiatan';
 
 const inputClass = 'mt-1 min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-200 disabled:bg-gray-100 disabled:text-gray-600';
 const STATUS_STYLES = {
@@ -24,7 +24,8 @@ const EXPORT_COLUMNS = [
   { header: 'Tanggal', value: k => k.TANGGAL, width: 12 },
   { header: 'Nama Kegiatan', value: k => k['NAMA KEGIATAN'], width: 32 },
   { header: 'Program', value: k => k.PROGRAM, width: 20 },
-  { header: 'Lokasi', value: k => k.LOKASI, width: 24 },
+  { header: 'Daerah', value: k => k.DAERAH, width: 30 },
+  { header: 'Alamat Penyaluran', value: k => k['ALAMAT PENYALURAN'], width: 30 },
   { header: 'Sumber Dana', value: k => k['SUMBER DANA'], width: 18 },
   { header: 'Anggaran (Rp)', value: k => k.ANGGARAN, number: true, width: 18 },
   { header: 'Realisasi (Rp)', value: k => k.REALISASI, number: true, width: 18 },
@@ -35,7 +36,7 @@ const EXPORT_COLUMNS = [
   { header: 'Keterangan', value: k => k.KETERANGAN, width: 30 }
 ];
 
-function KegiatanFormDialog({ kegiatan, programOptions, sumberDanaOptions, saving, onSubmit, onClose }) {
+function KegiatanFormDialog({ kegiatan, programOptions, daerahOptions, sumberDanaOptions, saving, onSubmit, onClose }) {
   const isNew = !kegiatan;
   const hasTransactions = Number(kegiatan?.['JUMLAH PENERIMA']) > 0;
   const [form, setForm] = useState({
@@ -43,14 +44,29 @@ function KegiatanFormDialog({ kegiatan, programOptions, sumberDanaOptions, savin
     'NAMA KEGIATAN': kegiatan?.['NAMA KEGIATAN'] || '',
     PROGRAM: kegiatan?.PROGRAM || '',
     TANGGAL: kegiatan?.TANGGAL || '',
-    LOKASI: kegiatan?.LOKASI || '',
+    DAERAH: parseDaerahList(kegiatan?.DAERAH),
+    'ALAMAT PENYALURAN': kegiatan?.['ALAMAT PENYALURAN'] || '',
     'SUMBER DANA': kegiatan?.['SUMBER DANA'] || '',
     ANGGARAN: kegiatan?.ANGGARAN ?? '',
     'PENANGGUNG JAWAB': kegiatan?.['PENANGGUNG JAWAB'] || '',
     STATUS: kegiatan?.STATUS || 'Rencana',
     KETERANGAN: kegiatan?.KETERANGAN || ''
   });
+  const [daerahError, setDaerahError] = useState(false);
   const change = (field) => (event) => setForm({ ...form, [field]: event.target.value });
+  const allDaerahSelected = daerahOptions.length > 0 && daerahOptions.every(d => form.DAERAH.includes(d));
+  const setDaerah = (list) => {
+    setForm({ ...form, DAERAH: list });
+    if (list.length) setDaerahError(false);
+  };
+  const toggleDaerah = (daerah) => setDaerah(
+    form.DAERAH.includes(daerah) ? form.DAERAH.filter(d => d !== daerah) : [...form.DAERAH, daerah]
+  );
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    if (!form.DAERAH.length) return setDaerahError(true);
+    onSubmit({ ...form, DAERAH: form.DAERAH.join(', ') });
+  };
   const field = (label, name, props = {}) => (
     <label className="block text-sm font-medium text-gray-800">
       {label}
@@ -60,7 +76,7 @@ function KegiatanFormDialog({ kegiatan, programOptions, sumberDanaOptions, savin
 
   return (
     <Dialog title={isNew ? 'Tambah Kegiatan' : 'Edit Kegiatan'} onClose={onClose} closeDisabled={saving} maxWidth="max-w-xl">
-      <form onSubmit={event => { event.preventDefault(); onSubmit(form); }} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         {field('Nama kegiatan', 'NAMA KEGIATAN', { required: true, maxLength: 150, 'data-autofocus': true })}
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-sm font-medium text-gray-800">
@@ -72,7 +88,6 @@ function KegiatanFormDialog({ kegiatan, programOptions, sumberDanaOptions, savin
             {hasTransactions && <span className="mt-1 block text-xs font-normal text-gray-600">Tidak bisa diganti karena sudah ada transaksi.</span>}
           </label>
           {field('Tanggal penyaluran', 'TANGGAL', { type: 'date', required: true })}
-          {field('Lokasi', 'LOKASI', { maxLength: 150 })}
           <label className="block text-sm font-medium text-gray-800">
             Sumber dana
             <input value={form['SUMBER DANA']} onChange={change('SUMBER DANA')} disabled={saving} list="sumber-dana-options" maxLength={100} placeholder="Contoh: Zakat" className={inputClass} />
@@ -90,6 +105,24 @@ function KegiatanFormDialog({ kegiatan, programOptions, sumberDanaOptions, savin
             <span className="mt-1 block text-xs font-normal text-gray-600">Kegiatan Selesai tidak bisa menerima transaksi baru.</span>
           </label>
         </div>
+        <fieldset aria-describedby={daerahError ? 'kegiatan-daerah-error' : undefined}>
+          <legend className="flex w-full items-center justify-between gap-2 text-sm font-medium text-gray-800">
+            Daerah penyaluran
+            <button type="button" onClick={() => setDaerah(allDaerahSelected ? [] : [...daerahOptions])} disabled={saving} className="min-h-11 rounded-lg px-2 text-sm font-medium text-teal-700 hover:bg-teal-50">
+              {allDaerahSelected ? 'Kosongkan' : 'Pilih semua'}
+            </button>
+          </legend>
+          <div className={`grid gap-x-4 rounded-lg border p-3 sm:grid-cols-2 ${daerahError ? 'border-red-400' : 'border-gray-300'}`}>
+            {daerahOptions.map(daerah => (
+              <label key={daerah} className="flex min-h-11 items-center gap-2 text-sm">
+                <input type="checkbox" checked={form.DAERAH.includes(daerah)} onChange={() => toggleDaerah(daerah)} disabled={saving} />
+                {daerah}
+              </label>
+            ))}
+          </div>
+          {daerahError && <p id="kegiatan-daerah-error" className="mt-1 text-sm text-red-700">Pilih minimal satu daerah.</p>}
+        </fieldset>
+        {field('Alamat penyaluran', 'ALAMAT PENYALURAN', { maxLength: 200, placeholder: 'Contoh: Aula Kantor Kecamatan Banjarmasin Utara' })}
         <label className="block text-sm font-medium text-gray-800">
           Keterangan
           <textarea value={form.KETERANGAN} onChange={change('KETERANGAN')} disabled={saving} rows={2} maxLength={500} className={inputClass} />
@@ -193,12 +226,13 @@ export default function KegiatanPage() {
 
       <section className="rounded-xl bg-white shadow-sm" aria-label="Daftar kegiatan">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[960px] text-sm">
+          <table className="w-full min-w-[1080px] text-sm">
             <thead className="bg-gray-50 text-gray-700">
               <tr>
                 <th className="p-3 text-left font-semibold">Tanggal</th>
                 <th className="p-3 text-left font-semibold">Kegiatan</th>
                 <th className="p-3 text-left font-semibold">Program</th>
+                <th className="p-3 text-left font-semibold">Daerah</th>
                 <th className="p-3 text-left font-semibold">Sumber Dana</th>
                 <th className="p-3 text-right font-semibold">Anggaran</th>
                 <th className="p-3 text-right font-semibold">Realisasi</th>
@@ -213,9 +247,10 @@ export default function KegiatanPage() {
                   <td className="whitespace-nowrap p-3">{formatTanggal(k.TANGGAL)}</td>
                   <td className="p-3">
                     <p className="font-medium text-gray-900">{k['NAMA KEGIATAN']}</p>
-                    <p className="text-xs text-gray-500">{[k.LOKASI, k['PENANGGUNG JAWAB'] && `PJ: ${k['PENANGGUNG JAWAB']}`].filter(Boolean).join(' · ') || k['ID KEGIATAN']}</p>
+                    <p className="text-xs text-gray-500">{[k['ALAMAT PENYALURAN'], k['PENANGGUNG JAWAB'] && `PJ: ${k['PENANGGUNG JAWAB']}`].filter(Boolean).join(' · ') || k['ID KEGIATAN']}</p>
                   </td>
                   <td className="p-3">{k.PROGRAM}</td>
+                  <td className="max-w-48 p-3">{k.DAERAH || '-'}</td>
                   <td className="p-3">{k['SUMBER DANA'] || '-'}</td>
                   <td className="numeric whitespace-nowrap p-3 text-right">{k.ANGGARAN === '' ? '-' : formatRupiah(k.ANGGARAN)}</td>
                   <td className="numeric whitespace-nowrap p-3 text-right">
@@ -262,6 +297,7 @@ export default function KegiatanPage() {
         <KegiatanFormDialog
           kegiatan={editing.kegiatan}
           programOptions={refData.program}
+          daerahOptions={refData.daerah}
           sumberDanaOptions={sumberDanaOptions}
           saving={saving}
           onSubmit={handleSubmit}

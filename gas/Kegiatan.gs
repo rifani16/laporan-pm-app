@@ -1,9 +1,27 @@
 const KEGIATAN_HEADERS = [
-  'ID KEGIATAN', 'NAMA KEGIATAN', 'PROGRAM', 'TANGGAL', 'LOKASI', 'SUMBER DANA',
-  'ANGGARAN', 'PENANGGUNG JAWAB', 'STATUS', 'KETERANGAN'
+  'ID KEGIATAN', 'NAMA KEGIATAN', 'PROGRAM', 'TANGGAL', 'DAERAH', 'ALAMAT PENYALURAN',
+  'SUMBER DANA', 'ANGGARAN', 'PENANGGUNG JAWAB', 'STATUS', 'KETERANGAN'
 ];
 const KEGIATAN_STATUS = ['Rencana', 'Berjalan', 'Selesai'];
-const KEGIATAN_TEXT_FIELDS = ['NAMA KEGIATAN', 'LOKASI', 'SUMBER DANA', 'PENANGGUNG JAWAB', 'KETERANGAN'];
+const KEGIATAN_TEXT_FIELDS = ['NAMA KEGIATAN', 'ALAMAT PENYALURAN', 'SUMBER DANA', 'PENANGGUNG JAWAB', 'KETERANGAN'];
+// Kolom DAERAH berisi satu atau lebih daerah, dipisah koma.
+const DAERAH_SEPARATOR = ', ';
+
+// Sheet versi awal memakai kolom LOKASI; ganti namanya supaya isinya tetap terpakai.
+function getKegiatanSheet() {
+  const sheet = getOrCreateSheet(SHEET_NAMES.KEGIATAN, []);
+  const headers = sheet.getLastColumn() ? sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0] : [];
+  const lokasiIndex = headers.indexOf('LOKASI');
+  if (lokasiIndex !== -1 && !headers.includes('ALAMAT PENYALURAN')) {
+    sheet.getRange(1, lokasiIndex + 1).setValue('ALAMAT PENYALURAN');
+  }
+  ensureColumns(sheet, KEGIATAN_HEADERS);
+  return sheet;
+}
+
+function parseDaerahList(value) {
+  return String(value || '').split(',').map(item => item.trim()).filter(Boolean);
+}
 
 function handleKegiatanAction(action, data) {
   if (action === 'TAMBAH_KEGIATAN') {
@@ -25,6 +43,7 @@ function handleKegiatanAction(action, data) {
 // Realisasi dan jumlah penerima dihitung dari seluruh transaksi, lintas daerah.
 function listKegiatan(salurRows) {
   if (!SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAMES.KEGIATAN)) return [];
+  getKegiatanSheet();
   const totals = new Map();
   for (const salur of salurRows) {
     const id = String(salur['ID KEGIATAN'] || '').trim();
@@ -89,6 +108,12 @@ function validateKegiatan(data) {
   const program = String(data.PROGRAM || '').trim();
   if (!getRefData().program.map(String).includes(program)) throw new Error('Pilih program yang terdaftar');
 
+  const knownDaerah = getRefData().daerah.map(String);
+  const daerah = [...new Set(parseDaerahList(data.DAERAH))];
+  if (daerah.length === 0) throw new Error('Pilih minimal satu daerah');
+  const unknown = daerah.filter(item => !knownDaerah.includes(item));
+  if (unknown.length) throw new Error(`Daerah tidak terdaftar: ${unknown.join(', ')}`);
+
   const tanggal = String(data.TANGGAL || '').trim();
   if (!isValidIsoDate(tanggal)) throw new Error('Tanggal penyaluran tidak valid');
 
@@ -101,12 +126,19 @@ function validateKegiatan(data) {
   const status = String(data.STATUS || 'Rencana');
   if (!KEGIATAN_STATUS.includes(status)) throw new Error('Status kegiatan tidak valid');
 
-  return { ...values, PROGRAM: program, TANGGAL: tanggal, ANGGARAN: anggaran, STATUS: status };
+  return {
+    ...values,
+    PROGRAM: program,
+    DAERAH: daerah.join(DAERAH_SEPARATOR),
+    TANGGAL: tanggal,
+    ANGGARAN: anggaran,
+    STATUS: status
+  };
 }
 
 function addKegiatan(data) {
   const values = validateKegiatan(data);
-  const sheet = getOrCreateSheet(SHEET_NAMES.KEGIATAN, KEGIATAN_HEADERS);
+  const sheet = getKegiatanSheet();
   const [headers, ...rows] = sheet.getDataRange().getValues();
   const idColumn = headers.indexOf('ID KEGIATAN');
   const lastNumber = rows.reduce((max, row) => {
@@ -120,6 +152,7 @@ function addKegiatan(data) {
 }
 
 function editKegiatan(data) {
+  getKegiatanSheet();
   const found = findKegiatan(data['ID KEGIATAN']);
   if (!found) throw new Error('Kegiatan tidak ditemukan');
   const values = validateKegiatan(data);

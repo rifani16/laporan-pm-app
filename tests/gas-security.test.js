@@ -225,7 +225,7 @@ describe('NIK uniqueness', () => {
 
 describe('kegiatan penyaluran', () => {
   const SALUR_HEADER = ['ID SALUR', 'ID PM', 'NAMA PENERIMA', 'DAERAH', 'PROGRAM', 'JUMLAH PENERIMAAN', 'KETERANGAN'];
-  const kegiatanInput = { 'NAMA KEGIATAN': 'Beasiswa Ganjil', PROGRAM: 'Beasiswa', TANGGAL: '2026-11-05', ANGGARAN: '5000000', STATUS: 'Berjalan' };
+  const kegiatanInput = { 'NAMA KEGIATAN': 'Beasiswa Ganjil', PROGRAM: 'Beasiswa', DAERAH: 'Metro', TANGGAL: '2026-11-05', ANGGARAN: '5000000', STATUS: 'Berjalan' };
   const col = (sheet, name) => sheets[sheet][0].indexOf(name);
   const cell = (sheet, row, name) => sheets[sheet][row][col(sheet, name)];
 
@@ -239,7 +239,7 @@ describe('kegiatan penyaluran', () => {
     reset();
     expect(context.addKegiatan(kegiatanInput)).toBe('KG-00001');
     expect(context.addKegiatan({ ...kegiatanInput, 'NAMA KEGIATAN': 'Kedua' })).toBe('KG-00002');
-    expect(sheets.KEGIATAN[0]).toEqual(['ID KEGIATAN', 'NAMA KEGIATAN', 'PROGRAM', 'TANGGAL', 'LOKASI', 'SUMBER DANA', 'ANGGARAN', 'PENANGGUNG JAWAB', 'STATUS', 'KETERANGAN']);
+    expect(sheets.KEGIATAN[0]).toEqual(['ID KEGIATAN', 'NAMA KEGIATAN', 'PROGRAM', 'TANGGAL', 'DAERAH', 'ALAMAT PENYALURAN', 'SUMBER DANA', 'ANGGARAN', 'PENANGGUNG JAWAB', 'STATUS', 'KETERANGAN']);
     expect(cell('KEGIATAN', 1, 'ANGGARAN')).toBe(5000000);
   });
 
@@ -250,6 +250,25 @@ describe('kegiatan penyaluran', () => {
     expect(() => context.addKegiatan({ ...kegiatanInput, ANGGARAN: '-1' })).toThrow('Anggaran');
     expect(() => context.addKegiatan({ ...kegiatanInput, STATUS: 'Batal' })).toThrow('Status');
     expect(() => context.addKegiatan({ ...kegiatanInput, 'NAMA KEGIATAN': ' ' })).toThrow('Nama kegiatan');
+    expect(() => context.addKegiatan({ ...kegiatanInput, DAERAH: '' })).toThrow('minimal satu daerah');
+    expect(() => context.addKegiatan({ ...kegiatanInput, DAERAH: 'Metro, Antah' })).toThrow('Daerah tidak terdaftar: Antah');
+  });
+
+  it('stores several daerah as one comma-separated cell, without duplicates', () => {
+    reset();
+    context.addKegiatan({ ...kegiatanInput, DAERAH: 'Metro,Bandar Lampung, Metro' });
+    expect(cell('KEGIATAN', 1, 'DAERAH')).toBe('Metro, Bandar Lampung');
+  });
+
+  it('renames the old LOKASI column so existing addresses are kept', () => {
+    reset();
+    sheets.KEGIATAN = [
+      ['ID KEGIATAN', 'NAMA KEGIATAN', 'PROGRAM', 'TANGGAL', 'LOKASI', 'SUMBER DANA', 'ANGGARAN', 'PENANGGUNG JAWAB', 'STATUS', 'KETERANGAN'],
+      ['KG-00001', 'Lama', 'Beasiswa', '2026-11-01', 'Aula Kantor', '', '', '', 'Berjalan', '']
+    ];
+    const [kegiatan] = context.listKegiatan([]);
+    expect(kegiatan['ALAMAT PENYALURAN']).toBe('Aula Kantor');
+    expect(sheets.KEGIATAN[0]).toContain('DAERAH');
   });
 
   it('adds a transaction under a kegiatan with program and audit trail from the server', () => {

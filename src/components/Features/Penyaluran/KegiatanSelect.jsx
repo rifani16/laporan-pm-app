@@ -31,7 +31,7 @@ export default function KegiatanSelect({ kegiatanList, value, onChange, allowNon
       {selected && (
         <p className="mt-1 text-sm text-gray-600">
           Program: <span className="font-medium text-gray-800">{selected.PROGRAM}</span>
-          {selected.LOKASI && <> · Lokasi: {selected.LOKASI}</>}
+          {selected.DAERAH && <> · Daerah: {selected.DAERAH}</>}
         </p>
       )}
     </div>
