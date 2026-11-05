@@ -144,13 +144,13 @@ export default function ProgramPenerimaPage() {
 
       <div className="flex flex-wrap items-end gap-4 rounded-lg bg-white p-4 shadow">
         <div className="flex-1 min-w-40">
-          <label htmlFor="filter-program" className="block text-sm font-medium">Program</label>
+          <label htmlFor="filter-program" className="mb-1.5 block text-sm font-medium">Program</label>
           <select id="filter-program" className="min-h-11 w-full rounded-lg border bg-white px-3 py-2 text-sm" value={filterProgram} onChange={e => handleFilterChange(setFilterProgram, e.target.value)}>
             {programList.map(p => <option key={p} value={p}>{p === 'semua' ? 'Semua Program' : p}</option>)}
           </select>
         </div>
         <div className="flex-[1.25] min-w-48">
-          <label htmlFor="filter-kegiatan" className="block text-sm font-medium">Kegiatan</label>
+          <label htmlFor="filter-kegiatan" className="mb-1.5 block text-sm font-medium">Kegiatan</label>
           <select id="filter-kegiatan" className="min-h-11 w-full rounded-lg border bg-white px-3 py-2 text-sm" value={filterKegiatan} onChange={e => handleFilterChange(setFilterKegiatan, e.target.value)}>
             <option value="semua">Semua Kegiatan</option>
             <option value="tanpa">Tanpa kegiatan (data lama)</option>
@@ -161,7 +161,7 @@ export default function ProgramPenerimaPage() {
         </div>
         <DateRangeFilter dari={periode.dari} sampai={periode.sampai} onChange={value => handleFilterChange(setPeriode, value)} />
         <div className="flex-1 min-w-40">
-          <label htmlFor="filter-daerah" className="block text-sm font-medium">Daerah</label>
+          <label htmlFor="filter-daerah" className="mb-1.5 block text-sm font-medium">Daerah</label>
           <select
             id="filter-daerah"
             className="min-h-11 w-full rounded-lg border bg-white px-3 py-2 text-sm disabled:bg-gray-100 disabled:text-gray-600"
@@ -173,7 +173,7 @@ export default function ProgramPenerimaPage() {
           </select>
         </div>
         <div className="flex-1 min-w-44">
-          <label htmlFor="filter-tampilan-nama" className="block text-sm font-medium">Tampilkan Nama</label>
+          <label htmlFor="filter-tampilan-nama" className="mb-1.5 block text-sm font-medium">Tampilkan Nama</label>
           <select
             id="filter-tampilan-nama"
             className="min-h-11 w-full rounded-lg border bg-white px-3 py-2 text-sm"
@@ -185,7 +185,7 @@ export default function ProgramPenerimaPage() {
           </select>
         </div>
         <div className="flex-[1.25] min-w-48">
-          <label htmlFor="filter-nama-pm" className="block text-sm font-medium">Cari Nama PM</label>
+          <label htmlFor="filter-nama-pm" className="mb-1.5 block text-sm font-medium">Cari Nama PM</label>
           <input
             id="filter-nama-pm"
             type="text"

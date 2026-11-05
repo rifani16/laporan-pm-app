@@ -50,11 +50,11 @@ export default function EditSalurModal({ data, onClose, onSave }) {
     <Dialog title="Edit Transaksi" onClose={onClose} closeDisabled={submitting} maxWidth="max-w-3xl">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <label htmlFor="edit-salur-id-pm" className="block text-sm font-medium">ID PM</label>
+            <label htmlFor="edit-salur-id-pm" className="mb-1.5 block text-sm font-medium">ID PM</label>
             <input id="edit-salur-id-pm" type="text" className="min-h-11 w-full rounded-lg border bg-gray-100 p-2" value={fixedPmId} disabled />
           </div>
           <div>
-            <label htmlFor="edit-salur-penerima" className="block text-sm font-medium">Nama Penerima</label>
+            <label htmlFor="edit-salur-penerima" className="mb-1.5 block text-sm font-medium">Nama Penerima</label>
             <select id="edit-salur-penerima" className="min-h-11 w-full rounded-lg border p-2" value={namaPenerima} onChange={e => setNamaPenerima(e.target.value)}>
               <option value="">-- Pilih Nama --</option>
               {namaOptions.map(o => <option key={o.label} value={o.label}>{o.label}</option>)}
@@ -68,7 +68,7 @@ export default function EditSalurModal({ data, onClose, onSave }) {
           />
           {isLegacy && !form.ID_KEGIATAN && (
             <div>
-              <label htmlFor="edit-salur-program" className="block text-sm font-medium">Program</label>
+              <label htmlFor="edit-salur-program" className="mb-1.5 block text-sm font-medium">Program</label>
               <select id="edit-salur-program" className="min-h-11 w-full rounded-lg border p-2" value={form.PROGRAM} onChange={e => setForm({...form, PROGRAM: e.target.value})}>
                 <option value="">-- Pilih Program --</option>
                 {refData.program.map(p => <option key={p}>{p}</option>)}
@@ -76,7 +76,7 @@ export default function EditSalurModal({ data, onClose, onSave }) {
             </div>
           )}
           <div>
-            <label className="block text-sm font-medium">Bentuk Penerimaan</label>
+            <label className="mb-1.5 block text-sm font-medium">Bentuk Penerimaan</label>
             <div className="flex gap-4 mt-1">
               <label className="flex items-center gap-2">
                 <input type="checkbox" checked={form.BENTUK_PENERIMAAN.uang} onChange={() => setForm(toggleBentuk(form, 'uang'))} /> Uang
@@ -87,11 +87,11 @@ export default function EditSalurModal({ data, onClose, onSave }) {
             </div>
           </div>
           <div>
-            <label htmlFor="edit-salur-jumlah" className="block text-sm font-medium">Jumlah Penerimaan (Rp)</label>
+            <label htmlFor="edit-salur-jumlah" className="mb-1.5 block text-sm font-medium">Jumlah Penerimaan (Rp)</label>
             <input id="edit-salur-jumlah" type="number" className="min-h-11 w-full rounded-lg border p-2 numeric" value={form.JUMLAH_PENERIMAAN} onChange={e => setForm({...form, JUMLAH_PENERIMAAN: e.target.value})} placeholder="Nominal dalam Rupiah" />
           </div>
           <div className="sm:col-span-2">
-            <label htmlFor="edit-salur-keterangan" className="block text-sm font-medium">Keterangan</label>
+            <label htmlFor="edit-salur-keterangan" className="mb-1.5 block text-sm font-medium">Keterangan</label>
             <textarea id="edit-salur-keterangan" className="w-full rounded-lg border p-2" value={form.KETERANGAN} onChange={e => setForm({...form, KETERANGAN: e.target.value})} rows={2} placeholder="Catatan tambahan" />
           </div>
         </div>

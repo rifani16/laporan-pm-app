@@ -51,7 +51,7 @@ export default function EditModal({ item, onClose, onSave }) {
           const fieldId = `edit-pm-${k.toLowerCase().replace(/\s+/g, '-')}`;
           return (
             <div key={k} className={k === 'CATATAN' ? 'sm:col-span-2 lg:col-span-3' : undefined}>
-              <label htmlFor={fieldId} className="block text-sm font-medium">{k}</label>
+              <label htmlFor={fieldId} className="mb-1.5 block text-sm font-medium">{k}</label>
               {k === 'ASNAF' ? (
                 <select id={fieldId} className="min-h-11 w-full rounded-lg border p-2" value={form[k]} onChange={e => setForm({ ...form, [k]: e.target.value })}>
                   <option value="">-- Pilih Asnaf --</option>

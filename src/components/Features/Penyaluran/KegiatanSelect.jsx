@@ -19,7 +19,7 @@ export default function KegiatanSelect({ kegiatanList, value, onChange, allowNon
 
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium">Kegiatan penyaluran</label>
+      <label htmlFor={id} className="mb-1.5 block text-sm font-medium">Kegiatan penyaluran</label>
       <select id={id} className="min-h-11 w-full rounded-lg border bg-white p-2" value={value} onChange={e => onChange(e.target.value)} required={!allowNone}>
         <option value="">{allowNone ? 'Tanpa kegiatan (data lama)' : 'Pilih kegiatan'}</option>
         {options.map(k => (

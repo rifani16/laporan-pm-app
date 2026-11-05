@@ -1,8 +1,9 @@
-import { useState, useMemo, useId } from 'react';
+import { useState, useMemo } from 'react';
 import { useData } from '@/hooks/useData';
 import { useToast } from '@/hooks/useToast';
 import { EMPTY_SALUR_FORM, getNamaOptions, toggleBentuk, buildSalurPayload } from './salurFields';
 import KegiatanSelect from './KegiatanSelect';
+import PmCombobox from './PmCombobox';
 
 export default function SalurForm() {
   const { masterData, kegiatanList, createSalur } = useData();
@@ -12,7 +13,6 @@ export default function SalurForm() {
   const [form, setForm] = useState(EMPTY_SALUR_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const pmListId = useId();
 
   const pmOptions = useMemo(() => {
     return masterData.map(pm => ({
@@ -21,13 +21,18 @@ export default function SalurForm() {
     }));
   }, [masterData]);
 
-  const handleSearchChange = (e) => {
-    const value = e.target.value;
-    const match = pmOptions.find(opt => opt.label === value);
+  // Mengetik ulang membatalkan pilihan PM; memilih PM baru mengosongkan isian lain.
+  const handleQueryChange = (value) => {
     setSearchTerm(value);
-    setSelectedPmId(match ? match.id : '');
+    setSelectedPmId('');
     setNamaPenerima('');
-    if (match) setForm(EMPTY_SALUR_FORM);
+  };
+
+  const handleSelectPm = (option) => {
+    setSearchTerm(option.label);
+    setSelectedPmId(option.id);
+    setNamaPenerima('');
+    setForm(EMPTY_SALUR_FORM);
   };
 
   const selectedPm = masterData.find(p => p['ID PM'] === selectedPmId);
@@ -63,28 +68,15 @@ export default function SalurForm() {
 
       <form onSubmit={handleSubmit} className="grid gap-4 lg:grid-cols-2">
         <div className="lg:col-span-2">
-          <label htmlFor="pm-search" className="block text-sm font-medium">Cari / Pilih ID PM atau Nama PM</label>
-          <input
-            id="pm-search"
-            type="text"
-            list={pmListId}
-            className="min-h-11 w-full rounded-lg border bg-white p-2"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            placeholder="Ketik ID PM atau nama..."
-            autoComplete="off"
-          />
-          <datalist id={pmListId}>
-            {pmOptions.map(opt => <option key={opt.id} value={opt.label} />)}
-          </datalist>
+          <PmCombobox options={pmOptions} query={searchTerm} onQueryChange={handleQueryChange} onSelect={handleSelectPm} />
           {searchTerm && !selectedPm && (
-            <p className="mt-1 text-sm text-gray-600">Pilih PM dari daftar saran yang muncul saat mengetik.</p>
+            <p className="mt-1 text-sm text-gray-600">Pilih salah satu PM dari daftar.</p>
           )}
         </div>
 
         {selectedPm && (
           <div>
-            <label htmlFor="nama-penerima" className="block text-sm font-medium">Pilih Nama Penerima</label>
+            <label htmlFor="nama-penerima" className="mb-1.5 block text-sm font-medium">Pilih Nama Penerima</label>
             <select
               id="nama-penerima"
               className="min-h-11 w-full rounded-lg border bg-white p-2"
@@ -105,7 +97,7 @@ export default function SalurForm() {
         />
 
         <div>
-          <label className="block text-sm font-medium">Bentuk Penerimaan</label>
+          <label className="mb-1.5 block text-sm font-medium">Bentuk Penerimaan</label>
           <div className="flex gap-4 mt-1">
             <label className="flex min-h-11 items-center gap-2">
               <input type="checkbox" checked={form.BENTUK_PENERIMAAN.uang} onChange={() => setForm(toggleBentuk(form, 'uang'))} />
@@ -119,7 +111,7 @@ export default function SalurForm() {
         </div>
 
         <div>
-          <label htmlFor="jumlah-penerimaan" className="block text-sm font-medium">Jumlah Penerimaan (Rp)</label>
+          <label htmlFor="jumlah-penerimaan" className="mb-1.5 block text-sm font-medium">Jumlah Penerimaan (Rp)</label>
           <input
             id="jumlah-penerimaan"
             type="number"
@@ -132,7 +124,7 @@ export default function SalurForm() {
         </div>
 
         <div className="lg:col-span-2">
-          <label htmlFor="keterangan-salur" className="block text-sm font-medium">Keterangan</label>
+          <label htmlFor="keterangan-salur" className="mb-1.5 block text-sm font-medium">Keterangan</label>
           <textarea
             id="keterangan-salur"
             className="w-full rounded-lg border bg-white p-2"

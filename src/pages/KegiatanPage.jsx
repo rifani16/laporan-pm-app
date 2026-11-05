@@ -203,14 +203,14 @@ export default function KegiatanPage() {
 
       <div className="flex flex-wrap items-end gap-4 rounded-lg bg-white p-4 shadow">
         <div className="min-w-36 flex-1">
-          <label htmlFor="filter-status-kegiatan" className="block text-sm font-medium">Status</label>
+          <label htmlFor="filter-status-kegiatan" className="mb-1.5 block text-sm font-medium">Status</label>
           <select id="filter-status-kegiatan" value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="min-h-11 w-full rounded-lg border bg-white px-3 py-2 text-sm">
             <option value="semua">Semua Status</option>
             {KEGIATAN_STATUS.map(status => <option key={status} value={status}>{status}</option>)}
           </select>
         </div>
         <div className="min-w-40 flex-1">
-          <label htmlFor="filter-program-kegiatan" className="block text-sm font-medium">Program</label>
+          <label htmlFor="filter-program-kegiatan" className="mb-1.5 block text-sm font-medium">Program</label>
           <select id="filter-program-kegiatan" value={filterProgram} onChange={e => setFilterProgram(e.target.value)} className="min-h-11 w-full rounded-lg border bg-white px-3 py-2 text-sm">
             <option value="semua">Semua Program</option>
             {refData.program.map(program => <option key={program} value={program}>{program}</option>)}
