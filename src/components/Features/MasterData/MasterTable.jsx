@@ -33,28 +33,13 @@ export default function MasterTable({ data, emptyState, onUpdate, onDelete, curr
   const sortedData = useMemo(() => {
     if (!sortConfig.key) return data;
 
-    return [...data].sort((a, b) => {
-      const aValue = a[sortConfig.key];
-      const bValue = b[sortConfig.key];
-
-      if (aValue === bValue) return 0;
-
-      if (sortConfig.key === 'TOTAL PENERIMAAN') {
-        return sortConfig.direction === 'asc'
-          ? (Number(aValue) || 0) - (Number(bValue) || 0)
-          : (Number(bValue) || 0) - (Number(aValue) || 0);
-      }
-
-      const aStr = String(aValue || '').toLowerCase();
-      const bStr = String(bValue || '').toLowerCase();
-
-      if (aStr < bStr) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (aStr > bStr) return sortConfig.direction === 'asc' ? 1 : -1;
-      return 0;
-    });
+    const { key, direction } = sortConfig;
+    const sign = direction === 'asc' ? 1 : -1;
+    const compare = key === 'TOTAL PENERIMAAN'
+      ? (a, b) => (Number(a[key]) || 0) - (Number(b[key]) || 0)
+      : (a, b) => String(a[key] || '').localeCompare(String(b[key] || ''), 'id', { sensitivity: 'base' });
+    return [...data].sort((a, b) => sign * compare(a, b));
   }, [data, sortConfig]);
-
-
 
   const totalPages = Math.ceil(sortedData.length / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
@@ -82,7 +67,6 @@ export default function MasterTable({ data, emptyState, onUpdate, onDelete, curr
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
-      {/* tabel sama seperti sebelumnya */}
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead className="bg-gray-100">
@@ -100,7 +84,7 @@ export default function MasterTable({ data, emptyState, onUpdate, onDelete, curr
                   Total Penerimaan <SortIcon active={sortConfig.key === 'TOTAL PENERIMAAN'} direction={sortConfig.direction} />
                 </button>
               </th>
-              <th className={`p-2 text-center ${isSuperAdmin ? 'w-40 min-w-40' : 'w-28 min-w-28'}`}>Aksi</th>
+              <th className={`p-2 text-center ${isSuperAdmin ? 'w-48 min-w-48' : 'w-32 min-w-32'}`}>Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -111,15 +95,15 @@ export default function MasterTable({ data, emptyState, onUpdate, onDelete, curr
                 <td className="p-2">{pm['DAERAH'] || '-'}</td>
                 <td className="min-w-48 max-w-xs whitespace-normal p-2 text-gray-700">{pm['PENERIMAAN PROGRAM'] || '-'}</td>
                 <td className="p-2 text-right numeric">Rp {Number(pm['TOTAL PENERIMAAN'] || 0).toLocaleString('id-ID')}</td>
-                <td className={`p-2 text-right ${isSuperAdmin ? 'w-40 min-w-40' : 'w-28 min-w-28'}`}>
+                <td className={`p-2 text-right ${isSuperAdmin ? 'w-48 min-w-48' : 'w-32 min-w-32'}`}>
                   <div className="flex flex-wrap justify-end gap-1">
-                    <button onClick={() => setDetailItem(pm)} className="rounded-md bg-blue-600 px-2 py-1.5 text-xs font-medium text-white hover:bg-blue-700">Detail</button>
-                    <button onClick={() => setEditItem(pm)} className="rounded-md bg-teal-600 px-2 py-1.5 text-xs font-medium text-white hover:bg-teal-700">Edit</button>
+                    <button onClick={() => setDetailItem(pm)} className="min-h-11 rounded-lg px-2 font-medium text-gray-700 hover:bg-gray-100">Detail</button>
+                    <button onClick={() => setEditItem(pm)} className="min-h-11 rounded-lg px-2 font-medium text-teal-700 hover:bg-teal-50">Edit</button>
                     {isSuperAdmin && (
                       <button
                         onClick={() => setDeleteTarget(pm)}
                         disabled={deletingId === pm['ID PM']}
-                        className="rounded-md bg-red-600 px-2 py-1.5 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                        className="min-h-11 rounded-lg px-2 font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
                       >
                         {deletingId === pm['ID PM'] ? 'Menghapus...' : 'Hapus'}
                       </button>

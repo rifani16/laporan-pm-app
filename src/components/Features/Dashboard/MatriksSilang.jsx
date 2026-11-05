@@ -18,7 +18,6 @@ export default function MatriksSilang({ salurData }) {
     return m;
   }, [salurData]);
 
-  // Filter daerah dan program yang memiliki data
   const daerahList = refData.daerah.filter(daerah => {
     const row = matriks[daerah];
     if (!row) return false;

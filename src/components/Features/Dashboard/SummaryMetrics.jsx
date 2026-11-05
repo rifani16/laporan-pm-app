@@ -1,10 +1,5 @@
-export default function SummaryMetrics({ salurData}) {
-  // Hitung jumlah unik ID PM dari data salur yang sudah difilter
-  const uniquePmIds = new Set();
-  salurData.forEach(s => {
-    if (s['ID PM']) uniquePmIds.add(s['ID PM']);
-  });
-  const totalPenerima = uniquePmIds.size;
+export default function SummaryMetrics({ salurData }) {
+  const totalPenerima = new Set(salurData.map(s => s['ID PM']).filter(Boolean)).size;
   const totalTransaksi = salurData.length;
   const totalDana = salurData.reduce((sum, s) => sum + (Number(s['JUMLAH PENERIMAAN']) || 0), 0);
 

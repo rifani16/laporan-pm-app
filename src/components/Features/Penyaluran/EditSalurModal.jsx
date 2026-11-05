@@ -2,80 +2,33 @@ import { useState } from 'react';
 import { useData } from '../../../hooks/useData';
 import { useToast } from '../../../hooks/useToast';
 import Dialog from '../../Common/Dialog';
+import { getNamaOptions, toggleBentuk, buildSalurPayload } from './salurFields';
 
 export default function EditSalurModal({ data, onClose, onSave }) {
   const { masterData, refData } = useData();
   const { showToast } = useToast();
+  const fixedPmId = data['ID PM'];
+  const bentuk = data['BENTUK PENERIMAAN'] || '';
 
-  // Nilai default (hanya untuk menghindari conditional hooks)
-  const defaultIdPm = data ? data['ID PM'] : '';
-  const defaultNamaPenerima = data ? (data['NAMA PENERIMA'] || data['NAMA PM'] || '') : '';
-  const defaultProgram = data ? data['PROGRAM'] : '';
-  const defaultBentuk = data ? data['BENTUK PENERIMAAN'] : '';
-  const defaultJumlah = (data && data['JUMLAH PENERIMAAN'] != null) ? data['JUMLAH PENERIMAAN'] : '';
-  const defaultKeterangan = data ? data['KETERANGAN'] : '';
-
-  const [namaPenerima, setNamaPenerima] = useState(defaultNamaPenerima);
+  const [namaPenerima, setNamaPenerima] = useState(data['NAMA PENERIMA'] || data['NAMA PM'] || '');
   const [form, setForm] = useState({
-    PROGRAM: defaultProgram,
-    BENTUK_PENERIMAAN: {
-      uang: defaultBentuk.includes('Uang'),
-      barang: defaultBentuk.includes('Barang')
-    },
-    JUMLAH_PENERIMAAN: defaultJumlah,
-    KETERANGAN: defaultKeterangan
+    PROGRAM: data['PROGRAM'] || '',
+    BENTUK_PENERIMAAN: { uang: bentuk.includes('Uang'), barang: bentuk.includes('Barang') },
+    JUMLAH_PENERIMAAN: data['JUMLAH PENERIMAAN'] ?? '',
+    KETERANGAN: data['KETERANGAN'] || ''
   });
   const [submitting, setSubmitting] = useState(false);
 
-  if (!data) return null;
-
-  const fixedPmId = defaultIdPm;
   const selectedPm = masterData.find(p => p['ID PM'] === fixedPmId);
-  const namaOptions = selectedPm
-    ? [
-        { label: selectedPm['NAMA PM'], nik: selectedPm['NIK'] },
-        { label: selectedPm['NAMA PM ALT'], nik: selectedPm['NIK ALT'] }
-      ].filter(o => o.label)
-    : [];
-
-  const handleCheckboxChange = (type) => {
-    setForm(prev => ({
-      ...prev,
-      BENTUK_PENERIMAAN: { ...prev.BENTUK_PENERIMAAN, [type]: !prev.BENTUK_PENERIMAAN[type] }
-    }));
-  };
+  const namaOptions = getNamaOptions(selectedPm);
 
   const handleSubmit = async () => {
-    if (!namaPenerima) return showToast('Pilih nama penerima', 'error');
-    if (!form.PROGRAM) return showToast('Pilih program', 'error');
-    const { uang, barang } = form.BENTUK_PENERIMAAN;
-    if (!uang && !barang) return showToast('Pilih bentuk penerimaan', 'error');
-    const jumlah = Number(form.JUMLAH_PENERIMAAN);
-    if (isNaN(jumlah) || jumlah <= 0) return showToast('Jumlah penerimaan harus >0', 'error');
-
-    const bentukArr = [];
-    if (uang) bentukArr.push('Uang');
-    if (barang) bentukArr.push('Barang');
-    const bentukPenerimaan = bentukArr.join(', ');
-    const selected = namaOptions.find(o => o.label === namaPenerima);
-    if (!selected) return showToast('Nama penerima tidak valid', 'error');
-
-    const payload = {
-      'ID SALUR': data['ID SALUR'],
-      'ID PM': fixedPmId,
-      'NAMA PENERIMA': namaPenerima,
-      'NIK PENERIMA': selected.nik,
-      'DAERAH': selectedPm['DAERAH'] || '',
-      'ALAMAT': selectedPm['ALAMAT'] || '',
-      'PROGRAM': form.PROGRAM,
-      'BENTUK PENERIMAAN': bentukPenerimaan,
-      'JUMLAH PENERIMAAN': jumlah,
-      'KETERANGAN': form.KETERANGAN
-    };
+    const { error, payload } = buildSalurPayload(selectedPm, namaPenerima, form);
+    if (error) return showToast(error, 'error');
 
     setSubmitting(true);
     try {
-      const result = await onSave(payload);
+      const result = await onSave({ 'ID SALUR': data['ID SALUR'], ...payload });
       if (result?.success) {
         showToast('Transaksi berhasil diperbarui', 'success');
         onClose();
@@ -114,10 +67,10 @@ export default function EditSalurModal({ data, onClose, onSave }) {
             <label className="block text-sm font-medium">Bentuk Penerimaan</label>
             <div className="flex gap-4 mt-1">
               <label className="flex items-center gap-2">
-                <input type="checkbox" checked={form.BENTUK_PENERIMAAN.uang} onChange={() => handleCheckboxChange('uang')} /> Uang
+                <input type="checkbox" checked={form.BENTUK_PENERIMAAN.uang} onChange={() => setForm(toggleBentuk(form, 'uang'))} /> Uang
               </label>
               <label className="flex items-center gap-2">
-                <input type="checkbox" checked={form.BENTUK_PENERIMAAN.barang} onChange={() => handleCheckboxChange('barang')} /> Barang
+                <input type="checkbox" checked={form.BENTUK_PENERIMAAN.barang} onChange={() => setForm(toggleBentuk(form, 'barang'))} /> Barang
               </label>
             </div>
           </div>

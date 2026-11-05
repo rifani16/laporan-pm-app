@@ -92,8 +92,8 @@ function editSalurRow(data) {
 
   const rowRange = sheet.getRange(targetRow, 1, 1, sheet.getLastColumn());
   const rowValues = rowRange.getValues()[0];
+  // ID PM sengaja tidak bisa diubah: transaksi tidak boleh dipindah ke PM lain.
   const fieldMapping = {
-    'ID PM': 'ID PM',
     'NAMA PENERIMA': 'NAMA PENERIMA',
     'NIK PENERIMA': 'NIK PENERIMA',
     'DAERAH': 'DAERAH',

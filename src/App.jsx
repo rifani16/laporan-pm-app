@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AuthProvider } from './contexts/AuthProvider';
 import { useAuth } from './hooks/useAuth';
 import { useData } from './hooks/useData';
@@ -64,19 +64,26 @@ function PageContent() {
   );
 }
 
+function MobileSidebar({ onClose }) {
+  const dialogRef = useRef(null);
+  useEffect(() => dialogRef.current.showModal(), []);
+
+  return (
+    <dialog
+      ref={dialogRef}
+      aria-label="Menu navigasi"
+      onClose={onClose}
+      onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}
+      className="m-0 h-dvh max-h-none w-64 p-0 backdrop:bg-black/50 md:hidden"
+    >
+      <Sidebar isMobile onClose={onClose} />
+    </dialog>
+  );
+}
+
 function AuthenticatedApp() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   const closeSidebar = () => setSidebarOpen(false);
-
-  useEffect(() => {
-    if (!sidebarOpen) return undefined;
-    const handleEscape = (event) => {
-      if (event.key === 'Escape') setSidebarOpen(false);
-    };
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [sidebarOpen]);
 
   return (
     <DataProvider>
@@ -90,29 +97,9 @@ function AuthenticatedApp() {
         <div className="hidden md:block">
           <Sidebar />
         </div>
-        {sidebarOpen && (
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label="Menu navigasi"
-            className="fixed inset-y-0 left-0 z-30 w-64 md:hidden"
-          >
-            <Sidebar isMobile onClose={closeSidebar} />
-          </div>
-        )}
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 z-20 bg-black/50 md:hidden"
-            onClick={closeSidebar}
-            aria-hidden="true"
-          />
-        )}
-        <div
-          className="flex flex-1 flex-col overflow-hidden"
-          inert={sidebarOpen}
-          aria-hidden={sidebarOpen || undefined}
-        >
-          <Header toggleSidebar={toggleSidebar} />
+        {sidebarOpen && <MobileSidebar onClose={closeSidebar} />}
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <Header toggleSidebar={() => setSidebarOpen(true)} />
           <main id="main-content" className="flex-1 overflow-y-auto p-4 md:p-6">
             <div className="mx-auto w-full max-w-screen-2xl">
               <PageContent />

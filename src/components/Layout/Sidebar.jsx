@@ -6,8 +6,6 @@ import {
   ListFilter,
   Settings,
   LogOut,
-  Shield,
-  MapPin,
   X
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -15,25 +13,20 @@ import { useAuth } from '@/hooks/useAuth';
 export default function Sidebar({ isMobile = false, onClose }) {
   const { user, logout, isSuperAdmin } = useAuth();
 
-  const allNavItems = [
-    { to: '/', label: 'Dashboard', icon: LayoutDashboard, roles: ['super_admin', 'admin_daerah'] },
-    { to: '/master', label: 'Daftar PM', icon: Users, roles: ['super_admin', 'admin_daerah'] },
-    { to: '/salur', label: 'Input Penyaluran', icon: PlusCircle, roles: ['super_admin', 'admin_daerah'] },
-    { to: '/program-penerima', label: 'Penerima per Program', icon: ListFilter, roles: ['super_admin', 'admin_daerah'] },
-    { to: '/program', label: 'Manajemen Program', icon: Settings, roles: ['super_admin'] }
-  ];
-
-  const currentRole = user?.role || (isSuperAdmin ? 'super_admin' : 'admin_daerah');
-  const navItems = allNavItems.filter(item => item.roles.includes(currentRole));
+  const navItems = [
+    { to: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/master', label: 'Daftar PM', icon: Users },
+    { to: '/salur', label: 'Input Penyaluran', icon: PlusCircle },
+    { to: '/program-penerima', label: 'Penerima per Program', icon: ListFilter },
+    { to: '/program', label: 'Manajemen Program', icon: Settings, superOnly: true }
+  ].filter(item => !item.superOnly || isSuperAdmin);
 
   return (
     <aside className="flex h-full w-64 flex-col bg-teal-800 text-white shadow-lg">
-      {/* Brand Header */}
       <div className="flex items-center justify-between border-b border-teal-700 p-5 font-bold text-xl">
         <span>PM System</span>
         {isMobile && (
           <button
-            autoFocus={isMobile}
             onClick={onClose}
             aria-label="Tutup menu navigasi"
             className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg hover:bg-teal-700 md:hidden"
@@ -43,7 +36,6 @@ export default function Sidebar({ isMobile = false, onClose }) {
         )}
       </div>
 
-      {/* Navigation Items */}
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {navItems.map((item) => (
           <NavLink
@@ -61,7 +53,6 @@ export default function Sidebar({ isMobile = false, onClose }) {
         ))}
       </nav>
 
-      {/* User Info & Logout Footer */}
       {user && (
         <div className="border-t border-teal-700 bg-teal-900/40 p-4">
           <div className="mb-3">
@@ -72,18 +63,16 @@ export default function Sidebar({ isMobile = false, onClose }) {
             </div>
             <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
               <span
-                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium ${
+                className={`rounded-full px-2 py-0.5 font-medium ${
                   isSuperAdmin
                     ? 'bg-amber-400 text-amber-950'
                     : 'bg-teal-600 text-teal-50'
                 }`}
               >
-                <Shield size={12} />
                 {isSuperAdmin ? 'Super Admin' : 'Admin Daerah'}
               </span>
               {!isSuperAdmin && user.daerah && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-teal-700/80 px-2 py-0.5 text-teal-100">
-                  <MapPin size={12} />
+                <span className="rounded-full bg-teal-700/80 px-2 py-0.5 text-teal-100">
                   {user.daerah}
                 </span>
               )}

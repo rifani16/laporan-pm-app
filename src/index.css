@@ -26,6 +26,10 @@
   button:active:not(:disabled) {
     transform: scale(0.98);
   }
+
+  body:has(dialog[open]) {
+    overflow: hidden;
+  }
 }
 
 @layer utilities {

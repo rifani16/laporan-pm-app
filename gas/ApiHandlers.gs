@@ -77,6 +77,9 @@ function handlePostRequest(e) {
       if (action === 'EDIT_SALUR') {
         assertRowInDaerah(SHEET_NAMES.SALUR, 'ID SALUR', sanitizedData['ID SALUR'], session);
       }
+      if (action === 'TAMBAH_SALUR') {
+        assertRowInDaerah(SHEET_NAMES.MASTER, 'ID PM', sanitizedData['ID PM'], session);
+      }
       sanitizedData['DAERAH'] = session.daerah;
     }
 

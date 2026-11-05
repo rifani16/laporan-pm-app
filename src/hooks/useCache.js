@@ -1,7 +1,6 @@
 import { useReducer, useEffect, useCallback, useRef } from 'react';
 
-const CACHE_TTL = 30 * 60 * 1000; // 30 menit (lebih lama)
-const initialRequests = new Map();
+const CACHE_TTL = 30 * 60 * 1000;
 
 const initialState = { data: null, loading: true, error: null };
 
@@ -16,16 +15,6 @@ function cacheReducer(state, action) {
     default:
       return state;
   }
-}
-
-function fetchInitialData(key, fetcher) {
-  if (!initialRequests.has(key)) {
-    const request = Promise.resolve()
-      .then(fetcher)
-      .finally(() => initialRequests.delete(key));
-    initialRequests.set(key, request);
-  }
-  return initialRequests.get(key);
 }
 
 export default function useCache(key, fetcher) {
@@ -60,9 +49,7 @@ export default function useCache(key, fetcher) {
           localStorage.removeItem(key);
         }
       }
-      // Deduplikasi request awal yang dijalankan dua kali oleh StrictMode.
-      // Refresh paksa tetap selalu mengambil data terbaru.
-      const fresh = force ? await fetcher() : await fetchInitialData(key, fetcher);
+      const fresh = await fetcher();
       // Komponen sudah unmount (mis. logout) atau ada request lebih baru: jangan tulis.
       if (isStale()) return;
       localStorage.setItem(key, JSON.stringify({ timestamp: Date.now(), value: fresh }));

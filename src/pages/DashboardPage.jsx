@@ -46,16 +46,8 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header dan filter responsif */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Dashboard Rangkuman</h1>
-          {!isSuperAdmin && userDaerah && (
-            <p className="text-xs text-teal-700 font-medium mt-0.5">
-              Wilayah Operasional: {userDaerah}
-            </p>
-          )}
-        </div>
+        <h1 className="text-2xl font-bold text-gray-800">Dashboard Rangkuman</h1>
         <div className="flex flex-col gap-3 sm:flex-row">
           <select
             aria-label="Filter dashboard berdasarkan daerah"

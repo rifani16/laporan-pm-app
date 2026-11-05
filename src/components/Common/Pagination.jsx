@@ -10,9 +10,7 @@ export default function Pagination({
   if (totalPages <= 1 && !onRowsPerPageChange) return null;
 
   const handleRowsChange = (event) => {
-    const requestedRows = Number(event.target.value);
-    const nextRows = ROW_OPTIONS.includes(requestedRows) ? requestedRows : 10;
-    onRowsPerPageChange(nextRows);
+    onRowsPerPageChange(Number(event.target.value));
     onPageChange(1);
   };
 

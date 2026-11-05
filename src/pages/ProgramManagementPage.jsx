@@ -150,7 +150,7 @@ export default function ProgramManagementPage() {
           <button
             type="submit"
             disabled={saving || !newName.trim()}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-2 font-medium text-white hover:bg-teal-700 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-2 font-medium text-white hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Plus size={18} aria-hidden="true" />
             {saving ? 'Menyimpan...' : 'Tambah Program'}
@@ -198,7 +198,7 @@ export default function ProgramManagementPage() {
                         <button
                           type="button"
                           onClick={() => openEdit(name)}
-                          className="inline-flex min-h-11 items-center gap-1 rounded-lg px-3 py-2 font-medium text-teal-700 hover:bg-teal-50 active:scale-[0.97]"
+                          className="inline-flex min-h-11 items-center gap-1 rounded-lg px-3 py-2 font-medium text-teal-700 hover:bg-teal-50"
                           aria-label={`Edit program ${name}`}
                         >
                           <Pencil size={16} aria-hidden="true" /> Edit
@@ -206,7 +206,7 @@ export default function ProgramManagementPage() {
                         <button
                           type="button"
                           onClick={() => requestDelete(name)}
-                          className="inline-flex min-h-11 items-center gap-1 rounded-lg px-3 py-2 font-medium text-red-700 hover:bg-red-50 active:scale-[0.97]"
+                          className="inline-flex min-h-11 items-center gap-1 rounded-lg px-3 py-2 font-medium text-red-700 hover:bg-red-50"
                           aria-label={`Hapus program ${name}`}
                           title={usage > 0 ? `Masih digunakan oleh ${usage} transaksi` : 'Hapus program'}
                         >
@@ -242,7 +242,7 @@ export default function ProgramManagementPage() {
             <label htmlFor="edit-program" className="block text-sm font-medium text-gray-800">Nama program</label>
             <input
               id="edit-program"
-              autoFocus
+              data-autofocus
               value={editName}
               onChange={event => setEditName(event.target.value)}
               maxLength={100}

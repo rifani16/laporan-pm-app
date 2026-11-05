@@ -15,7 +15,7 @@ export default function MasterDataPage() {
 
   const activeFilterDaerah = !isSuperAdmin && userDaerah ? userDaerah : filterDaerah;
 
-  const filteredMaster = (masterData || [])
+  const filteredMaster = masterData
     .filter(pm => activeFilterDaerah === 'semua' || pm['DAERAH'] === activeFilterDaerah)
     .filter(pm => {
       if (!searchTerm.trim()) return true;
@@ -45,20 +45,13 @@ export default function MasterDataPage() {
     setCurrentPage(1);
   };
 
-  if (loading && (!masterData || masterData.length === 0)) {
+  if (loading && masterData.length === 0) {
     return <div className="text-center py-10">Memuat data master...</div>;
   }
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-        <h1 className="text-2xl font-bold">Data Penerima Manfaat</h1>
-        {!isSuperAdmin && userDaerah && (
-          <span className="text-xs bg-teal-50 text-teal-700 border border-teal-200 px-2.5 py-1 rounded-full font-medium w-fit">
-            Wilayah: {userDaerah}
-          </span>
-        )}
-      </div>
+      <h1 className="mb-4 text-2xl font-bold">Data Penerima Manfaat</h1>
 
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <select
@@ -92,7 +85,7 @@ export default function MasterDataPage() {
         )}
         <button
           onClick={() => setShowModal(true)}
-          className="min-h-11 whitespace-nowrap rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 active:scale-[0.98]"
+          className="min-h-11 whitespace-nowrap rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
         >
           + Tambah PM
         </button>

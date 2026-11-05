@@ -16,6 +16,11 @@ function isUnsafeCellText(value) {
 function sanitizeObject(obj) {
   const result = {};
   for (const [key, value] of Object.entries(obj)) {
+    // "__proto__" dari JSON.parse akan mengganti prototype result dan melewati sanitasi.
+    if (key === '__proto__') continue;
+    if (value !== null && typeof value === 'object') {
+      throw new Error('Format data tidak valid');
+    }
     if (UNSANITIZED_KEYS.includes(key)) {
       result[key] = value;
     } else if (typeof value === 'string') {

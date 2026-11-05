@@ -67,7 +67,6 @@ export default function TambahPmModal({ onClose }) {
   return (
     <Dialog title="Tambah Penerima Manfaat Baru" onClose={onClose} closeDisabled={submitting} maxWidth="max-w-2xl">
       <form onSubmit={handleSubmit}>
-        {/* Baris 1: NAMA PM dan NIK */}
         <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label htmlFor="tambah-nama-pm" className="block text-sm font-medium">Nama PM *</label>
@@ -80,7 +79,6 @@ export default function TambahPmModal({ onClose }) {
           </div>
         </div>
 
-        {/* Baris 2: NAMA PM ALT dan NIK ALT */}
         <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label htmlFor="tambah-nama-alt" className="block text-sm font-medium">Nama PM alternatif</label>
@@ -93,7 +91,6 @@ export default function TambahPmModal({ onClose }) {
           </div>
         </div>
 
-        {/* Baris 3: NO KK dan NO HP */}
         <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label htmlFor="tambah-no-kk" className="block text-sm font-medium">Nomor KK</label>
@@ -106,7 +103,6 @@ export default function TambahPmModal({ onClose }) {
           </div>
         </div>
 
-        {/* Baris 4: ALAMAT DAN DAERAH */}
         <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label htmlFor="tambah-alamat" className="block text-sm font-medium">Alamat</label>
@@ -127,7 +123,6 @@ export default function TambahPmModal({ onClose }) {
           </div>
         </div>
 
-        {/* Baris 5: ASNAF dan PEKERJAAN */}
         <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label htmlFor="tambah-asnaf" className="block text-sm font-medium">Asnaf</label>
@@ -142,7 +137,6 @@ export default function TambahPmModal({ onClose }) {
           </div>
         </div>
 
-        {/* Baris 6: CATATAN (full width) */}
         <div className="mb-3">
           <label htmlFor="tambah-catatan" className="block text-sm font-medium">Catatan</label>
           <textarea id="tambah-catatan" className="w-full rounded-lg border p-2" rows={2} value={form['CATATAN']} onChange={e => handleChange('CATATAN', e.target.value)} placeholder="Catatan tambahan (opsional)" />

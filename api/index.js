@@ -25,7 +25,7 @@ function isSameHost(origin, host) {
 }
 
 export default async function handler(req, res) {
-  // 1. Validasi origin (CORS). POST wajib punya origin yang diizinkan.
+  // POST wajib punya origin yang diizinkan.
   const origin = req.headers.origin;
   const originAllowed = !!origin
     && (getAllowedOrigins().includes(origin) || isSameHost(origin, req.headers.host));
@@ -42,7 +42,6 @@ export default async function handler(req, res) {
     return res.status(originAllowed ? 200 : 403).end();
   }
 
-  // 2. Batasi hanya method yang diperlukan
   if (!['GET', 'POST'].includes(req.method)) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -53,7 +52,7 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: 'Origin not allowed' });
   }
 
-  // 3. GAS_URL dan API key server-only (tanpa prefix VITE_ agar tidak bocor ke client)
+  // Server-only (tanpa prefix VITE_) agar tidak ter-inline ke bundle client.
   const gasUrl = process.env.GAS_URL;
   const apiKey = process.env.GAS_API_KEY;
   if (!gasUrl || !apiKey) {

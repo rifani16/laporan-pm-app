@@ -101,14 +101,7 @@ export default function ProgramPenerimaPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        <h1 className="text-2xl font-bold text-gray-800">Penerima per Program</h1>
-        {!isSuperAdmin && userDaerah && (
-          <span className="text-xs bg-teal-50 text-teal-700 border border-teal-200 px-2.5 py-1 rounded-full font-medium w-fit">
-            Wilayah: {userDaerah}
-          </span>
-        )}
-      </div>
+      <h1 className="text-2xl font-bold text-gray-800">Penerima per Program</h1>
 
       <div className="flex flex-wrap items-end gap-4 rounded-lg bg-white p-4 shadow">
         <div className="flex-1 min-w-40">
@@ -172,7 +165,7 @@ export default function ProgramPenerimaPage() {
                 <th className="p-2 text-left">Daerah</th>
                 <th className="p-2 text-left">Program</th>
                 <th className="p-2 text-right">Jumlah Penerimaan</th>
-                <th className={`p-2 text-center ${isSuperAdmin ? 'w-40 min-w-40' : 'w-28 min-w-28'}`}>Aksi</th>
+                <th className={`p-2 text-center ${isSuperAdmin ? 'w-48 min-w-48' : 'w-32 min-w-32'}`}>Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -198,15 +191,15 @@ export default function ProgramPenerimaPage() {
                     <td className="p-2">{item.DAERAH || '-'}</td>
                     <td className="p-2">{item['PROGRAM']}</td>
                     <td className="p-2 text-right numeric">Rp {Number(item['JUMLAH PENERIMAAN'] || 0).toLocaleString('id-ID')}</td>
-                    <td className={`p-2 text-right ${isSuperAdmin ? 'w-40 min-w-40' : 'w-28 min-w-28'}`}>
+                    <td className={`p-2 text-right ${isSuperAdmin ? 'w-48 min-w-48' : 'w-32 min-w-32'}`}>
                       <div className="flex flex-wrap justify-end gap-1">
-                        <button onClick={() => setDetailItem(item)} className="whitespace-nowrap rounded-md bg-blue-600 px-2 py-1.5 text-xs font-medium text-white hover:bg-blue-700">Detail</button>
-                        <button onClick={() => setEditItem(item)} className="whitespace-nowrap rounded-md bg-teal-600 px-2 py-1.5 text-xs font-medium text-white hover:bg-teal-700">Edit</button>
+                        <button onClick={() => setDetailItem(item)} className="min-h-11 whitespace-nowrap rounded-lg px-2 font-medium text-gray-700 hover:bg-gray-100">Detail</button>
+                        <button onClick={() => setEditItem(item)} className="min-h-11 whitespace-nowrap rounded-lg px-2 font-medium text-teal-700 hover:bg-teal-50">Edit</button>
                         {isSuperAdmin && (
                           <button
                             onClick={() => setDeleteTarget(item)}
                             disabled={deletingId === item['ID SALUR']}
-                            className="whitespace-nowrap rounded-md bg-red-600 px-2 py-1.5 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                            className="min-h-11 whitespace-nowrap rounded-lg px-2 font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
                           >
                             {deletingId === item['ID SALUR'] ? 'Menghapus...' : 'Hapus'}
                           </button>
