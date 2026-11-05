@@ -3,6 +3,24 @@ import { useData } from '../hooks/useData';
 import { useAuth } from '../hooks/useAuth';
 import MasterTable from '../components/Features/MasterData/MasterTable';
 import TambahPmModal from '../components/Features/MasterData/TambahPmModal';
+import ExportExcelButton from '../components/Common/ExportExcelButton';
+
+const EXPORT_COLUMNS = [
+  { header: 'ID PM', value: pm => pm['ID PM'], width: 16 },
+  { header: 'Nama PM', value: pm => pm['NAMA PM'], width: 28 },
+  { header: 'NIK', value: pm => pm['NIK'], width: 20 },
+  { header: 'Nama PM Alt', value: pm => pm['NAMA PM ALT'], width: 24 },
+  { header: 'NIK Alt', value: pm => pm['NIK ALT'], width: 20 },
+  { header: 'No KK', value: pm => pm['NO KK'], width: 20 },
+  { header: 'No HP', value: pm => pm['NO HP'], width: 16 },
+  { header: 'Alamat', value: pm => pm['ALAMAT'], width: 36 },
+  { header: 'Daerah', value: pm => pm['DAERAH'], width: 18 },
+  { header: 'Asnaf', value: pm => pm['ASNAF'], width: 14 },
+  { header: 'Pekerjaan', value: pm => pm['PEKERJAAN'], width: 18 },
+  { header: 'Program Diterima', value: pm => (pm['PENERIMAAN PROGRAM'] === '-' ? '' : pm['PENERIMAAN PROGRAM']), width: 30 },
+  { header: 'Total Penerimaan (Rp)', value: pm => pm['TOTAL PENERIMAAN'], number: true, width: 20 },
+  { header: 'Catatan', value: pm => pm['CATATAN'], width: 30 }
+];
 
 export default function MasterDataPage() {
   const { masterData, updateMaster, deleteMaster, loading, refData } = useData();
@@ -83,6 +101,7 @@ export default function MasterDataPage() {
             Reset filter
           </button>
         )}
+        <ExportExcelButton fileName="daftar-pm" rows={filteredMaster} columns={EXPORT_COLUMNS} />
         <button
           onClick={() => setShowModal(true)}
           className="min-h-11 whitespace-nowrap rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"

@@ -7,6 +7,21 @@ import DetailSalurModal from '../components/Features/Penyaluran/DetailSalurModal
 import EditSalurModal from '../components/Features/Penyaluran/EditSalurModal';
 import ConfirmDialog from '../components/Common/ConfirmDialog';
 import { useToast } from '../hooks/useToast';
+import ExportExcelButton from '../components/Common/ExportExcelButton';
+
+const EXPORT_COLUMNS = [
+  { header: 'ID Salur', value: s => s['ID SALUR'], width: 16 },
+  { header: 'ID PM', value: s => s['ID PM'], width: 16 },
+  { header: 'Nama Penerima', value: s => s['NAMA PENERIMA'], width: 28 },
+  { header: 'NIK Penerima', value: s => s['NIK PENERIMA'], width: 20 },
+  { header: 'Nama PM Utama', value: s => s.NAMA_PM_UTAMA, width: 28 },
+  { header: 'Daerah', value: s => s.DAERAH, width: 18 },
+  { header: 'Alamat', value: s => s.ALAMAT, width: 36 },
+  { header: 'Program', value: s => s['PROGRAM'], width: 22 },
+  { header: 'Bentuk Penerimaan', value: s => s['BENTUK PENERIMAAN'], width: 18 },
+  { header: 'Jumlah Penerimaan (Rp)', value: s => s['JUMLAH PENERIMAAN'], number: true, width: 20 },
+  { header: 'Keterangan', value: s => s['KETERANGAN'], width: 30 }
+];
 
 export default function ProgramPenerimaPage() {
   const { salurData, masterData, refData, updateSalur, deleteSalur } = useData();
@@ -148,9 +163,16 @@ export default function ProgramPenerimaPage() {
         {(hasActiveFilter || displayMode !== 'penerima') && (
           <button onClick={resetFilters} className="min-h-11 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Reset filter</button>
         )}
-        <p className="w-full text-sm text-gray-600" aria-live="polite">
-          Menampilkan {filteredData.length} dari {enrichedSalur.length} transaksi
-        </p>
+        <div className="flex w-full flex-wrap items-center justify-between gap-2">
+          <p className="text-sm text-gray-600" aria-live="polite">
+            Menampilkan {filteredData.length} dari {enrichedSalur.length} transaksi
+          </p>
+          <ExportExcelButton
+            fileName={filterProgram === 'semua' ? 'penyaluran' : `penyaluran-${filterProgram}`}
+            rows={filteredData}
+            columns={EXPORT_COLUMNS}
+          />
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
